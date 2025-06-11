@@ -1,10 +1,12 @@
 package api
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/liriquew/test_task/internal/lib/config"
 )
 
 type Server struct {
@@ -24,12 +26,13 @@ type Service interface {
 	CheckAdminPermission(http.Handler) http.Handler
 }
 
-func New(service Service) *http.Server {
+func New(cfg config.AppConfig, service Service) *http.Server {
 	r := chi.NewMux()
 
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.Logger)
 
+	r.Get("/ping", Ping)
 	r.With(service.AuthReuqired).Route("/users", func(r chi.Router) {
 		r.Get("/", service.ListUsers)
 		r.Get("/{userId}", service.GetUser)
@@ -46,7 +49,11 @@ func New(service Service) *http.Server {
 	})
 
 	return &http.Server{
-		Addr:    ":8080",
+		Addr:    fmt.Sprintf("%s:%d", cfg.API.Host, cfg.API.Port),
 		Handler: r,
 	}
+}
+
+func Ping(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("pong"))
 }

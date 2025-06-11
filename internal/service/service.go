@@ -9,7 +9,7 @@ import (
 type Repository interface {
 	ListUsers() []models.User
 
-	CreateUser(models.User) error
+	CreateUser(models.User) (int64, error)
 	GetUserById(int64) (*models.User, error)
 	UpdateUser(models.User) error
 	DeleteUser(int64) error

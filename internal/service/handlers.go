@@ -18,6 +18,9 @@ func (s *Service) ListUsers(w http.ResponseWriter, r *http.Request) {
 	s.log.Info("ListUsers:", slog.Any(
 		"users", users,
 	))
+	for i := range users {
+		users[i].Password = ""
+	}
 
 	jsontools.Encode(w, users)
 }
@@ -30,9 +33,42 @@ func (s *Service) CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s.repo.CreateUser(user)
+	if user.Username == "" {
+		http.Error(w, "empty username", http.StatusBadRequest)
+		return
+	}
+	if user.Password == "" {
+		http.Error(w, "empty password", http.StatusBadRequest)
+		return
+	}
+	if user.Email == "" {
+		http.Error(w, "empty email", http.StatusBadRequest)
+		return
+	}
 
+	id, err := s.repo.CreateUser(user)
+	if err != nil {
+		if errors.Is(err, storage.ErrUsernameExists) {
+			http.Error(w, "username already taken", http.StatusConflict)
+			return
+		}
+		if errors.Is(err, storage.ErrEmailExists) {
+			http.Error(w, "email already taken", http.StatusConflict)
+			return
+		}
+
+		// never happen
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	resp := struct {
+		Id int64 `json:"id"`
+	}{
+		Id: id,
+	}
 	w.WriteHeader(http.StatusCreated)
+	jsontools.Encode(w, resp)
 }
 
 func (s *Service) GetUser(w http.ResponseWriter, r *http.Request) {
@@ -55,6 +91,8 @@ func (s *Service) GetUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	user.Password = ""
+
 	jsontools.Encode(w, user)
 }
 
@@ -69,10 +107,11 @@ func (s *Service) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	err = s.repo.DeleteUser(userId)
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
-			w.WriteHeader(http.StatusNotFound)
+			w.WriteHeader(http.StatusOK)
 			return
 		}
 
+		// never happen
 		s.log.Warn("error while getting user in DeleteUser", sl.Err(err))
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -96,6 +135,7 @@ func (s *Service) PatchUser(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		// never happen
 		s.log.Warn("error while patch user", sl.Err(err))
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -110,7 +150,20 @@ func (s *Service) PatchUser(w http.ResponseWriter, r *http.Request) {
 
 	oldUser.Patch(newUser)
 
-	s.repo.UpdateUser(*oldUser)
+	if err := s.repo.UpdateUser(*oldUser); err != nil {
+		if errors.Is(err, storage.ErrUsernameExists) {
+			http.Error(w, "username already taken", http.StatusConflict)
+			return
+		}
+		if errors.Is(err, storage.ErrEmailExists) {
+			http.Error(w, "email already taken", http.StatusConflict)
+			return
+		}
+
+		// never happen
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 
 	w.WriteHeader(http.StatusOK)
 }
@@ -132,7 +185,33 @@ func (s *Service) PutUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s.repo.UpdateUser(newUser)
+	if newUser.Username == "" {
+		http.Error(w, "empty username", http.StatusBadRequest)
+		return
+	}
+	if newUser.Password == "" {
+		http.Error(w, "empty password", http.StatusBadRequest)
+		return
+	}
+	if newUser.Email == "" {
+		http.Error(w, "empty email", http.StatusBadRequest)
+		return
+	}
+
+	if err := s.repo.UpdateUser(newUser); err != nil {
+		if errors.Is(err, storage.ErrUsernameExists) {
+			http.Error(w, "username already taken", http.StatusConflict)
+			return
+		}
+		if errors.Is(err, storage.ErrEmailExists) {
+			http.Error(w, "email already taken", http.StatusConflict)
+			return
+		}
+
+		// never happen
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 
 	w.WriteHeader(http.StatusOK)
 }

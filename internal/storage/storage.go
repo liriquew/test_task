@@ -60,15 +60,15 @@ func (s *Storage) ListUsers() []models.User {
 	return res
 }
 
-func (s *Storage) CreateUser(user models.User) error {
+func (s *Storage) CreateUser(user models.User) (int64, error) {
 	s.m.Lock()
 	defer s.m.Unlock()
 
 	if _, ok := s.usernames[user.Username]; ok {
-		return ErrUsernameExists
+		return 0, ErrUsernameExists
 	}
 	if _, ok := s.emails[user.Email]; ok {
-		return ErrEmailExists
+		return 0, ErrEmailExists
 	}
 
 	user.Id = s.nextId()
@@ -77,7 +77,7 @@ func (s *Storage) CreateUser(user models.User) error {
 	s.usernames[user.Username] = user.Id
 	s.emails[user.Email] = struct{}{}
 
-	return nil
+	return user.Id, nil
 }
 
 func (s *Storage) GetUserById(id int64) (*models.User, error) {
@@ -95,27 +95,27 @@ func (s *Storage) GetUserById(id int64) (*models.User, error) {
 func (s *Storage) UpdateUser(user models.User) error {
 	s.m.Lock()
 	defer s.m.Unlock()
-	// is exists isn't required, user gets from Storage.GetUserById
 
+	// is exists isn't required, user gets from Storage.GetUserById
 	old := s.users[user.Id]
 
 	if old.Username != user.Username {
 		if _, ok := s.usernames[user.Username]; ok {
 			return ErrUsernameExists
 		}
-
-		delete(s.usernames, old.Username)
-		s.usernames[user.Username] = user.Id
 	}
 
 	if old.Email != user.Email {
 		if _, ok := s.emails[user.Email]; ok {
 			return ErrEmailExists
 		}
-
-		delete(s.emails, old.Email)
-		s.emails[user.Email] = struct{}{}
 	}
+
+	delete(s.usernames, old.Username)
+	s.usernames[user.Username] = user.Id
+
+	delete(s.emails, old.Email)
+	s.emails[user.Email] = struct{}{}
 
 	s.users[user.Id] = &user
 
@@ -132,6 +132,7 @@ func (s *Storage) DeleteUser(id int64) error {
 
 	delete(s.users, id)
 	delete(s.usernames, user.Username)
+	delete(s.emails, user.Email)
 
 	return nil
 }

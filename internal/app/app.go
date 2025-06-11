@@ -14,6 +14,7 @@ import (
 
 type App struct {
 	srv *http.Server
+	cfg config.AppConfig
 }
 
 func New(log *slog.Logger, cfg config.AppConfig) App {
@@ -21,7 +22,7 @@ func New(log *slog.Logger, cfg config.AppConfig) App {
 
 	service := service.New(log, storage)
 
-	server := api.New(service)
+	server := api.New(cfg, service)
 
 	return App{
 		srv: server,

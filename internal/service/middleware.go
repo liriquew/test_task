@@ -20,6 +20,7 @@ func (s *Service) AuthReuqired(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		scheme := r.Header.Get("Authorization")
 		if scheme == "" {
+			w.Header().Add("WWW-Authenticate", `Basic realm="user service"`)
 			http.Error(w, "missed authorization header", http.StatusUnauthorized)
 			return
 		}
