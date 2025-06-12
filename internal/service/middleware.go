@@ -5,12 +5,12 @@ import (
 	"encoding/base64"
 	"fmt"
 	"net/http"
-	"strconv"
 	"strings"
 
 	"errors"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
 )
 
 type UserIdKey struct{}
@@ -70,14 +70,14 @@ func (s *Service) CheckAdminPermission(next http.Handler) http.Handler {
 	})
 }
 
-func GetRequestUserId(r *http.Request) int64 {
-	id := r.Context().Value(UserIdKey{}).(int64)
+func GetRequestUserId(r *http.Request) uuid.UUID {
+	id := r.Context().Value(UserIdKey{}).(uuid.UUID)
 	return id
 }
 
-func GetUserIdParam(r *http.Request) (id int64, err error) {
-	id, err = strconv.ParseInt(chi.URLParam(r, "userId"), 10, 64)
-	return
+func GetUserIdParam(r *http.Request) (uuid.UUID, error) {
+	id := chi.URLParam(r, "userId")
+	return uuid.Parse(id)
 }
 
 func GetCleanCredentials(scheme string) (username, password string, err error) {

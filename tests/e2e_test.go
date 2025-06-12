@@ -11,6 +11,7 @@ import (
 	"encoding/json"
 
 	"github.com/brianvoe/gofakeit/v6"
+	uuid "github.com/google/uuid"
 	"github.com/liriquew/test_task/internal/lib/config"
 	"github.com/liriquew/test_task/internal/models"
 	"github.com/stretchr/testify/assert"
@@ -20,7 +21,7 @@ import (
 var cfg config.AppTestConfig
 
 type Id struct {
-	Id int64 `json:"id"`
+	Id uuid.UUID `json:"id"`
 }
 
 func TestMain(m *testing.M) {
@@ -50,15 +51,15 @@ func GetAuthHeader(user *models.User) map[string]string {
 	}
 }
 
-func CreateUser(t *testing.T, user *models.User) int64 {
+func CreateUser(t *testing.T, user *models.User) uuid.UUID {
 	const url = "users/"
 	var id Id
 	DoRequest(t, "POST", url, user, GetAuthHeader(models.GetDefaultAdmin()), 201, &id)
 	return id.Id
 }
 
-func GetUser(t *testing.T, id int64) models.User {
-	url := fmt.Sprintf("users/%d", id)
+func GetUser(t *testing.T, id uuid.UUID) models.User {
+	url := fmt.Sprintf("users/%s", id.String())
 	user := models.User{}
 	DoRequest(t, "GET", url, nil, GetAuthHeader(models.GetDefaultAdmin()), 200, &user)
 	return user
@@ -145,7 +146,7 @@ func TestGetUser(t *testing.T) {
 
 	t.Run("New user", func(t *testing.T) {
 		t.Parallel()
-		url := fmt.Sprintf("users/%d", id.Id)
+		url := fmt.Sprintf("users/%s", id.Id.String())
 		newUser := models.User{}
 		DoRequest(t, "GET", url, nil, GetAuthHeader(user), 200, &newUser)
 		require.NotZero(t, id.Id)
@@ -157,13 +158,15 @@ func TestGetUser(t *testing.T) {
 
 	t.Run("Unauthorized", func(t *testing.T) {
 		t.Parallel()
-		url := fmt.Sprintf("users/%d", id.Id)
+		url := fmt.Sprintf("users/%s", id.Id.String())
 		DoRequest(t, "GET", url, nil, nil, 401, nil)
 	})
 
 	t.Run("Not found", func(t *testing.T) {
 		t.Parallel()
-		url := fmt.Sprintf("users/%d", 99999)
+
+		id, _ := uuid.NewV7()
+		url := fmt.Sprintf("users/%s", id.String())
 		DoRequest(t, "GET", url, nil, GetAuthHeader(user), 404, nil)
 	})
 }
@@ -177,7 +180,7 @@ func TestPatchUser(t *testing.T) {
 		user := GetRandomUser()
 		user.Id = CreateUser(t, user)
 
-		url := fmt.Sprintf("users/%d", user.Id)
+		url := fmt.Sprintf("users/%s", user.Id.String())
 		user.Username = gofakeit.Username()
 		user.Email = gofakeit.Email()
 		DoRequest(t, "PATCH", url, models.User{
@@ -203,7 +206,7 @@ func TestPutUser(t *testing.T) {
 		newUser := GetRandomUser()
 		newUser.Id = user.Id
 
-		url := fmt.Sprintf("users/%d", user.Id)
+		url := fmt.Sprintf("users/%s", user.Id.String())
 		DoRequest(t, "PUT", url, newUser, GetAuthHeader(models.GetDefaultAdmin()), 200, nil)
 
 		updatedUser := GetUser(t, user.Id)
@@ -221,7 +224,7 @@ func TestDeleteUser(t *testing.T) {
 		user := GetRandomUser()
 		user.Id = CreateUser(t, user)
 
-		url := fmt.Sprintf("users/%d", user.Id)
+		url := fmt.Sprintf("users/%s", user.Id.String())
 		DoRequest(t, "DELETE", url, nil, GetAuthHeader(models.GetDefaultAdmin()), 200, nil)
 
 		DoRequest(t, "GET", url, nil, GetAuthHeader(models.GetDefaultAdmin()), 404, nil)

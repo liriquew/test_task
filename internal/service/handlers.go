@@ -6,6 +6,7 @@ import (
 
 	"log/slog"
 
+	"github.com/google/uuid"
 	"github.com/liriquew/test_task/internal/lib/jsontools"
 	"github.com/liriquew/test_task/internal/models"
 	"github.com/liriquew/test_task/internal/storage"
@@ -63,9 +64,9 @@ func (s *Service) CreateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp := struct {
-		Id int64 `json:"id"`
+		Id uuid.UUID `json:"id"`
 	}{
-		Id: id,
+		Id: *id,
 	}
 	w.WriteHeader(http.StatusCreated)
 	jsontools.Encode(w, resp)

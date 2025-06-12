@@ -1,11 +1,13 @@
 package models
 
+import "github.com/google/uuid"
+
 type User struct {
-	Id       int64  `json:"id,omitempty"`
-	Username string `json:"username,omitempty"`
-	Email    string `json:"email,omitempty"`
-	Password string `json:"password,omitempty"`
-	Admin    Bool   `json:"admin"`
+	Id       uuid.UUID `json:"id,omitempty"`
+	Username string    `json:"username,omitempty"`
+	Email    string    `json:"email,omitempty"`
+	Password string    `json:"password,omitempty"`
+	Admin    Bool      `json:"admin"`
 }
 
 func (u *User) Copy() *User {

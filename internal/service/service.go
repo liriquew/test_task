@@ -3,16 +3,17 @@ package service
 import (
 	"log/slog"
 
+	"github.com/google/uuid"
 	"github.com/liriquew/test_task/internal/models"
 )
 
 type Repository interface {
 	ListUsers() []models.User
 
-	CreateUser(models.User) (int64, error)
-	GetUserById(int64) (*models.User, error)
+	CreateUser(models.User) (*uuid.UUID, error)
+	GetUserById(uuid.UUID) (*models.User, error)
 	UpdateUser(models.User) error
-	DeleteUser(int64) error
+	DeleteUser(uuid.UUID) error
 
 	GetUserByUsername(string) (*models.User, error)
 }

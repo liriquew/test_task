@@ -3,11 +3,17 @@ package models
 import (
 	"errors"
 	"fmt"
+
+	"github.com/google/uuid"
 )
 
 func GetDefaultAdmin() *User {
+	id, err := uuid.NewV7()
+	if err != nil {
+		panic(err)
+	}
 	return &User{
-		Id:       1,
+		Id:       id,
 		Username: "admin",
 		Email:    "admin@admin.ru",
 		Password: "admin",
