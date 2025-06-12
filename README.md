@@ -100,6 +100,11 @@ type Storage struct {
 
 Проверка корректности возвращенных значений выполняется вне этой функции
 
+Запуск тестов из корня проекта
+```bash
+go test ./tests/* -count 1 -v
+```
+
 ```go
 // tests/e2e_test.go
 func DoRequest(t *testing.T, method, url string, body any, header map[string]string, code int, respBody any) {
