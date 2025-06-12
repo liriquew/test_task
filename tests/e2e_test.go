@@ -148,12 +148,10 @@ func TestGetUser(t *testing.T) {
 		t.Parallel()
 		url := fmt.Sprintf("users/%s", id.Id.String())
 		newUser := models.User{}
-		DoRequest(t, "GET", url, nil, GetAuthHeader(user), 200, &newUser)
+		DoRequest(t, "GET", url, nil, GetAuthHeader(models.GetDefaultAdmin()), 200, &newUser)
 		require.NotZero(t, id.Id)
 
-		userCp := user.Copy()
-		userCp.Password = ""
-		assert.Equal(t, *userCp, newUser)
+		assert.Equal(t, *user, newUser)
 	})
 
 	t.Run("Unauthorized", func(t *testing.T) {
@@ -167,7 +165,15 @@ func TestGetUser(t *testing.T) {
 
 		id, _ := uuid.NewV7()
 		url := fmt.Sprintf("users/%s", id.String())
-		DoRequest(t, "GET", url, nil, GetAuthHeader(user), 404, nil)
+		DoRequest(t, "GET", url, nil, GetAuthHeader(models.GetDefaultAdmin()), 404, nil)
+	})
+
+	t.Run("Forbidden", func(t *testing.T) {
+		t.Parallel()
+
+		id, _ := uuid.NewV7()
+		url := fmt.Sprintf("users/%s", id.String())
+		DoRequest(t, "GET", url, nil, GetAuthHeader(user), 403, nil)
 	})
 }
 
@@ -189,7 +195,6 @@ func TestPatchUser(t *testing.T) {
 		}, GetAuthHeader(models.GetDefaultAdmin()), 200, nil)
 
 		patchedUser := GetUser(t, user.Id)
-		user.Password = ""
 		assert.Equal(t, *user, patchedUser)
 	})
 }
@@ -210,7 +215,6 @@ func TestPutUser(t *testing.T) {
 		DoRequest(t, "PUT", url, newUser, GetAuthHeader(models.GetDefaultAdmin()), 200, nil)
 
 		updatedUser := GetUser(t, user.Id)
-		newUser.Password = ""
 		assert.Equal(t, *newUser, updatedUser)
 	})
 }

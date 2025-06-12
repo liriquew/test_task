@@ -92,8 +92,6 @@ func (s *Service) GetUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user.Password = ""
-
 	jsontools.Encode(w, user)
 }
 

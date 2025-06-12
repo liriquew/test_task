@@ -8,11 +8,12 @@ import (
 
 	"log/slog"
 
+	"context"
+
 	"github.com/liriquew/test_task/internal/app"
 	"github.com/liriquew/test_task/internal/lib/config"
 	"github.com/liriquew/test_task/pkg/logger"
 	"github.com/liriquew/test_task/pkg/logger/sl"
-	"golang.org/x/net/context"
 )
 
 func main() {

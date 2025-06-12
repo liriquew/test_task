@@ -35,12 +35,11 @@ func New(cfg config.AppConfig, service Service) *http.Server {
 	r.Get("/ping", Ping)
 	r.With(service.AuthReuqired).Route("/users", func(r chi.Router) {
 		r.Get("/", service.ListUsers)
-		r.Get("/{userId}", service.GetUser)
-
 		r.With(service.CheckAdminPermission).Route("/", func(r chi.Router) {
 			r.Post("/", service.CreateUser)
 
 			r.Route("/{userId}", func(r chi.Router) {
+				r.Get("/", service.GetUser)
 				r.Patch("/", service.PatchUser)
 				r.Put("/", service.PutUser)
 				r.Delete("/", service.DeleteUser)
