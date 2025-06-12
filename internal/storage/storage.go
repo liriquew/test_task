@@ -11,7 +11,7 @@ import (
 type Storage struct {
 	users     map[uuid.UUID]*models.User
 	usernames map[string]uuid.UUID
-	emails    map[string]struct{}
+	// emails    map[string]struct{}
 
 	m *sync.RWMutex
 }
@@ -21,17 +21,17 @@ func New() *Storage {
 	usernames := map[string]uuid.UUID{
 		admin.Username: admin.Id,
 	}
-	emails := map[string]struct{}{
-		admin.Email: {},
-	}
+	// emails := map[string]struct{}{
+	// 	admin.Email: {},
+	// }
 	users := map[uuid.UUID]*models.User{
 		admin.Id: admin,
 	}
 	return &Storage{
 		users:     users,
 		usernames: usernames,
-		emails:    emails,
-		m:         &sync.RWMutex{},
+		// emails:    emails,
+		m: &sync.RWMutex{},
 	}
 }
 
@@ -61,9 +61,9 @@ func (s *Storage) CreateUser(user models.User) (*uuid.UUID, error) {
 	if _, ok := s.usernames[user.Username]; ok {
 		return nil, ErrUsernameExists
 	}
-	if _, ok := s.emails[user.Email]; ok {
-		return nil, ErrEmailExists
-	}
+	// if _, ok := s.emails[user.Email]; ok {
+	// 	return nil, ErrEmailExists
+	// }
 
 	var err error
 	user.Id, err = uuid.NewV7()
@@ -73,7 +73,7 @@ func (s *Storage) CreateUser(user models.User) (*uuid.UUID, error) {
 
 	s.users[user.Id] = &user
 	s.usernames[user.Username] = user.Id
-	s.emails[user.Email] = struct{}{}
+	// s.emails[user.Email] = struct{}{}
 
 	return &user.Id, nil
 }
@@ -103,17 +103,17 @@ func (s *Storage) UpdateUser(user models.User) error {
 		}
 	}
 
-	if old.Email != user.Email {
-		if _, ok := s.emails[user.Email]; ok {
-			return ErrEmailExists
-		}
-	}
+	// if old.Email != user.Email {
+	// 	if _, ok := s.emails[user.Email]; ok {
+	// 		return ErrEmailExists
+	// 	}
+	// }
 
 	delete(s.usernames, old.Username)
 	s.usernames[user.Username] = user.Id
 
-	delete(s.emails, old.Email)
-	s.emails[user.Email] = struct{}{}
+	// delete(s.emails, old.Email)
+	// s.emails[user.Email] = struct{}{}
 
 	s.users[user.Id] = &user
 
@@ -130,7 +130,7 @@ func (s *Storage) DeleteUser(id uuid.UUID) error {
 
 	delete(s.users, id)
 	delete(s.usernames, user.Username)
-	delete(s.emails, user.Email)
+	// delete(s.emails, user.Email)
 
 	return nil
 }
