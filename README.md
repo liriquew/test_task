@@ -84,8 +84,8 @@ type Repository interface {
 ```go
 // internal/storage/storage.go
 type Storage struct {
-	users     map[uuid.UUID]*models.User	// uuid -> user
-	usernames map[string]uuid.UUID			// username -> uuid
+	users     map[uuid.UUID]*models.User // uuid -> user
+	usernames map[string]uuid.UUID // username -> uuid
 
 	m *sync.RWMutex
 }
@@ -100,11 +100,6 @@ type Storage struct {
 
 Проверка корректности возвращенных значений выполняется вне этой функции
 
-Запуск тестов из корня проекта
-```bash
-go test ./tests/* -count 1 -v
-```
-
 ```go
 // tests/e2e_test.go
 func DoRequest(t *testing.T, method, url string, body any, header map[string]string, code int, respBody any) {
@@ -114,4 +109,9 @@ func DoRequest(t *testing.T, method, url string, body any, header map[string]str
 	// code - expected http status code
 	// respBody - any struct, if not nil, response body will be decoded into it
 }
+```
+
+Запуск тестов из корня проекта
+```bash
+go test ./tests/* -count 1 -v
 ```
