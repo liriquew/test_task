@@ -2,6 +2,7 @@ package tests
 
 import (
 	"bytes"
+	"database/sql"
 	"fmt"
 	"io"
 	"net/http"
@@ -36,7 +37,10 @@ func GetRandomUser() *models.User {
 		Password: gofakeit.AppName(),
 		Email:    gofakeit.Email(),
 		Admin: models.Bool{
-			Ok: true,
+			NullBool: sql.NullBool{
+				Bool:  false,
+				Valid: true,
+			},
 		},
 	}
 }
@@ -97,8 +101,6 @@ func DoRequest(t *testing.T, method, url string, body any, header map[string]str
 		err := json.NewDecoder(resp.Body).Decode(respBody)
 		require.NoError(t, err)
 	}
-
-	return
 }
 
 func TestCreateUser(t *testing.T) {
@@ -150,8 +152,11 @@ func TestGetUser(t *testing.T) {
 		newUser := models.User{}
 		DoRequest(t, "GET", url, nil, GetAuthHeader(models.GetDefaultAdmin()), 200, &newUser)
 		require.NotZero(t, id.Id)
+		newUser.Password = ""
+		userToCheck := user.Copy()
+		userToCheck.Password = ""
 
-		assert.Equal(t, *user, newUser)
+		assert.Equal(t, *userToCheck, newUser)
 	})
 
 	t.Run("Unauthorized", func(t *testing.T) {
@@ -195,6 +200,9 @@ func TestPatchUser(t *testing.T) {
 		}, GetAuthHeader(models.GetDefaultAdmin()), 200, nil)
 
 		patchedUser := GetUser(t, user.Id)
+		user.Password = ""
+		patchedUser.Password = ""
+
 		assert.Equal(t, *user, patchedUser)
 	})
 }
@@ -215,6 +223,8 @@ func TestPutUser(t *testing.T) {
 		DoRequest(t, "PUT", url, newUser, GetAuthHeader(models.GetDefaultAdmin()), 200, nil)
 
 		updatedUser := GetUser(t, user.Id)
+		newUser.Password = ""
+		updatedUser.Password = ""
 		assert.Equal(t, *newUser, updatedUser)
 	})
 }
@@ -240,21 +250,21 @@ func TestListUsers(t *testing.T) {
 
 	const cnt = 10
 
-	usersSet := make(map[models.User]int, 0)
+	usersSet := make(map[uuid.UUID]int, 0)
 	for range cnt {
 		user := GetRandomUser()
 
 		user.Id = CreateUser(t, user)
 
 		user.Password = ""
-		usersSet[*user] = 0
+		usersSet[user.Id] = 0
 	}
 
 	var resp []models.User
 	DoRequest(t, "GET", "users/", nil, GetAuthHeader(models.GetDefaultAdmin()), 200, &resp)
 
 	for _, user := range resp {
-		usersSet[user]++
+		usersSet[user.Id]++
 	}
 
 	for _, v := range usersSet {

@@ -1,24 +1,25 @@
 package service
 
 import (
+	"encoding/base64"
 	"errors"
 	"net/http"
-
-	"log/slog"
 
 	"github.com/google/uuid"
 	"github.com/liriquew/test_task/internal/lib/jsontools"
 	"github.com/liriquew/test_task/internal/models"
-	"github.com/liriquew/test_task/internal/storage"
+	"github.com/liriquew/test_task/internal/repository"
 	"github.com/liriquew/test_task/pkg/logger/sl"
+	"golang.org/x/crypto/bcrypt"
 )
 
 func (s *Service) ListUsers(w http.ResponseWriter, r *http.Request) {
-	users := s.repo.ListUsers()
+	users, err := s.repo.ListUsers(r.Context())
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 
-	s.log.Info("ListUsers:", slog.Any(
-		"users", users,
-	))
 	for i := range users {
 		users[i].Password = ""
 	}
@@ -47,18 +48,26 @@ func (s *Service) CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id, err := s.repo.CreateUser(user)
+	passwordHash, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
-		if errors.Is(err, storage.ErrUsernameExists) {
+		s.log.Warn("error while generating password hash", sl.Err(err))
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	user.Password = base64.StdEncoding.EncodeToString(passwordHash)
+
+	id, err := s.repo.CreateUser(r.Context(), user)
+	if err != nil {
+		s.log.Warn("error while creating user", sl.Err(err))
+		if errors.Is(err, repository.ErrUsernameExists) {
 			http.Error(w, "username already taken", http.StatusConflict)
 			return
 		}
-		if errors.Is(err, storage.ErrEmailExists) {
+		if errors.Is(err, repository.ErrEmailExists) {
 			http.Error(w, "email already taken", http.StatusConflict)
 			return
 		}
 
-		// never happen
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -80,14 +89,14 @@ func (s *Service) GetUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := s.repo.GetUserById(userId)
+	user, err := s.repo.GetUserById(r.Context(), userId)
 	if err != nil {
-		if errors.Is(err, storage.ErrNotFound) {
+		s.log.Warn("error while getting user by id", sl.Err(err))
+		if errors.Is(err, repository.ErrNotFound) {
 			w.WriteHeader(http.StatusNotFound)
 			return
 		}
 
-		s.log.Warn("error while getting user in GetUser", sl.Err(err))
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -103,15 +112,14 @@ func (s *Service) DeleteUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = s.repo.DeleteUser(userId)
+	err = s.repo.DeleteUser(r.Context(), userId)
 	if err != nil {
-		if errors.Is(err, storage.ErrNotFound) {
+		s.log.Warn("error while deleting user", sl.Err(err))
+		if errors.Is(err, repository.ErrNotFound) {
 			w.WriteHeader(http.StatusOK)
 			return
 		}
 
-		// never happen
-		s.log.Warn("error while getting user in DeleteUser", sl.Err(err))
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -120,46 +128,32 @@ func (s *Service) DeleteUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Service) PatchUser(w http.ResponseWriter, r *http.Request) {
+	user := models.User{}
+	if err := jsontools.Decode(r.Body, &user); err != nil {
+		s.log.Warn("error while decoding body in PatchUser", sl.Err(err))
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
 	userId, err := GetUserIdParam(r)
 	if err != nil {
 		s.log.Warn("error while getting userId param in DeleteUser", sl.Err(err))
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+	user.Id = userId
 
-	oldUser, err := s.repo.GetUserById(userId)
-	if err != nil {
-		if errors.Is(err, storage.ErrNotFound) {
-			w.WriteHeader(http.StatusNotFound)
-			return
-		}
-
-		// never happen
-		s.log.Warn("error while patch user", sl.Err(err))
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	newUser := models.User{}
-	if err := jsontools.Decode(r.Body, &newUser); err != nil {
-		s.log.Warn("error while decoding body in PatchUser", sl.Err(err))
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
-	oldUser.Patch(newUser)
-
-	if err := s.repo.UpdateUser(*oldUser); err != nil {
-		if errors.Is(err, storage.ErrUsernameExists) {
+	if err := s.repo.UpdateUser(r.Context(), user); err != nil {
+		s.log.Warn("error while patching user PatchUser", sl.Err(err))
+		if errors.Is(err, repository.ErrUsernameExists) {
 			http.Error(w, "username already taken", http.StatusConflict)
 			return
 		}
-		if errors.Is(err, storage.ErrEmailExists) {
+		if errors.Is(err, repository.ErrEmailExists) {
 			http.Error(w, "email already taken", http.StatusConflict)
 			return
 		}
 
-		// never happen
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -197,17 +191,17 @@ func (s *Service) PutUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := s.repo.UpdateUser(newUser); err != nil {
-		if errors.Is(err, storage.ErrUsernameExists) {
+	if err := s.repo.UpdateUser(r.Context(), newUser); err != nil {
+		s.log.Warn("error while updating user in PutUser", sl.Err(err))
+		if errors.Is(err, repository.ErrUsernameExists) {
 			http.Error(w, "username already taken", http.StatusConflict)
 			return
 		}
-		if errors.Is(err, storage.ErrEmailExists) {
+		if errors.Is(err, repository.ErrEmailExists) {
 			http.Error(w, "email already taken", http.StatusConflict)
 			return
 		}
 
-		// never happen
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}

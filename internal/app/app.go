@@ -8,8 +8,8 @@ import (
 
 	"github.com/liriquew/test_task/internal/app/api"
 	"github.com/liriquew/test_task/internal/lib/config"
+	"github.com/liriquew/test_task/internal/repository"
 	"github.com/liriquew/test_task/internal/service"
-	"github.com/liriquew/test_task/internal/storage"
 )
 
 type App struct {
@@ -18,7 +18,7 @@ type App struct {
 }
 
 func New(log *slog.Logger, cfg config.AppConfig) App {
-	storage := storage.New()
+	storage := repository.New(cfg.Storage)
 
 	service := service.New(log, storage)
 

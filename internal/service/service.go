@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"log/slog"
 
 	"github.com/google/uuid"
@@ -8,14 +9,14 @@ import (
 )
 
 type Repository interface {
-	ListUsers() []models.User
+	ListUsers(context.Context) ([]models.User, error)
 
-	CreateUser(models.User) (*uuid.UUID, error)
-	GetUserById(uuid.UUID) (*models.User, error)
-	UpdateUser(models.User) error
-	DeleteUser(uuid.UUID) error
+	CreateUser(context.Context, models.User) (*uuid.UUID, error)
+	GetUserById(context.Context, uuid.UUID) (*models.User, error)
+	UpdateUser(context.Context, models.User) error
+	DeleteUser(context.Context, uuid.UUID) error
 
-	GetUserByUsername(string) (*models.User, error)
+	GetUserByUsername(context.Context, string) (*models.User, error)
 }
 
 type Service struct {

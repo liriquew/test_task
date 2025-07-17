@@ -7,7 +7,8 @@ import (
 )
 
 type AppConfig struct {
-	API ServiceConfig `yaml:"service" env-required:"true"`
+	API     ServiceConfig `yaml:"service" env-required:"true"`
+	Storage StorageConfig `yaml:"storage" env-required:"true"`
 }
 
 type AppTestConfig struct {
@@ -17,6 +18,14 @@ type AppTestConfig struct {
 type ServiceConfig struct {
 	Port int    `yaml:"port" env-required:"true"`
 	Host string `yaml:"host" env-required:"true"`
+}
+
+type StorageConfig struct {
+	Username string `yaml:"username" env-required:"true"`
+	Password string `yaml:"password" env-required:"true"`
+	Host     string `yaml:"host" env-required:"true"`
+	Port     int    `yaml:"port" env-required:"true"`
+	DBName   string `yaml:"db_name" env-required:"true"`
 }
 
 func MustLoad() AppConfig {

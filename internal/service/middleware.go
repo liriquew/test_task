@@ -11,6 +11,8 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
+	"github.com/liriquew/test_task/pkg/logger/sl"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type UserIdKey struct{}
@@ -27,17 +29,27 @@ func (s *Service) AuthReuqired(next http.Handler) http.Handler {
 
 		username, password, err := GetCleanCredentials(scheme)
 		if err != nil {
+			s.log.Warn("error while getting clean creds", sl.Err(err))
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
 
-		user, err := s.repo.GetUserByUsername(username)
+		user, err := s.repo.GetUserByUsername(r.Context(), username)
 		if err != nil {
+			s.log.Warn("error while getting user by username", sl.Err(err))
 			http.Error(w, "user not found", http.StatusUnauthorized)
 			return
 		}
 
-		if user.Password != password {
+		hash, err := base64.StdEncoding.DecodeString(user.Password)
+		if err != nil {
+			s.log.Warn("error while decoding hash", sl.Err(err))
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		err = bcrypt.CompareHashAndPassword(hash, []byte(password))
+		if err != nil {
 			http.Error(w, "wrong username or password", http.StatusUnauthorized)
 			return
 		}
@@ -51,7 +63,7 @@ func (s *Service) AuthReuqired(next http.Handler) http.Handler {
 func (s *Service) CheckAdminPermission(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		id := GetRequestUserId(r)
-		user, err := s.repo.GetUserById(id)
+		user, err := s.repo.GetUserById(r.Context(), id)
 		if err != nil {
 			http.Error(
 				w,
@@ -61,7 +73,7 @@ func (s *Service) CheckAdminPermission(next http.Handler) http.Handler {
 			return
 		}
 
-		if !user.Admin.Value() {
+		if !user.Admin.Bool {
 			w.WriteHeader(http.StatusForbidden)
 			return
 		}

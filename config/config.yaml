@@ -1,3 +1,9 @@
 service:
   host: localhost
   port: 8080
+storage:
+  username: postgres
+  password: passw0rd
+  host: localhost
+  port: 5432
+  db_name: users_db

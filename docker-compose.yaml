@@ -9,3 +9,32 @@ services:
       - "8080:8080"
     environment:
       CONF_PATH: ./config/docker_config.yaml
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - app-network
+
+  postgres:
+    container_name: postgresql
+    image: postgres:17.5
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: passw0rd
+      POSTGRES_DB: users_db
+      PGDATA: /data/postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    ports:
+      - "5432:5432"
+    networks:
+      - app-network
+
+    restart: unless-stopped
+
+networks:
+  app-network:
+    driver: bridge

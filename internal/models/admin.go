@@ -1,7 +1,7 @@
 package models
 
 import (
-	"errors"
+	"database/sql"
 	"fmt"
 
 	"github.com/google/uuid"
@@ -18,30 +18,30 @@ func GetDefaultAdmin() *User {
 		Email:    "admin@admin.ru",
 		Password: "admin",
 		Admin: Bool{
-			Val: true,
-			Ok:  true,
+			sql.NullBool{
+				Valid: true,
+				Bool:  true,
+			},
 		},
 	}
 }
 
 type Bool struct {
-	Val bool
-	Ok  bool
+	sql.NullBool
 }
 
-func (b *Bool) Value() bool { return b.Val }
-func (b *Bool) Valid() bool { return b.Ok }
+func (b *Bool) Valid() bool { return b.NullBool.Bool }
 
 func (b *Bool) UnmarshalJSON(data []byte) error {
 	asString := string(data)
-	(*b).Ok = asString != ""
+	(*b).NullBool.Valid = asString != ""
 	if asString == "true" {
-		(*b).Val = true
+		(*b).NullBool.Bool = true
 	} else if asString == "false" {
-		(*b).Val = false
+		(*b).NullBool.Bool = false
 	} else {
-		return errors.New(
-			fmt.Sprintf("Boolean unmarshal error: invalid input %s", asString),
+		return fmt.Errorf(
+			"Boolean unmarshal error: invalid input %s", asString,
 		)
 	}
 
@@ -49,7 +49,7 @@ func (b *Bool) UnmarshalJSON(data []byte) error {
 }
 
 func (b Bool) MarshalJSON() ([]byte, error) {
-	if b.Val {
+	if b.NullBool.Bool {
 		return []byte("true"), nil
 	}
 
