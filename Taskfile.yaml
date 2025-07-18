@@ -1,0 +1,12 @@
+version: "3"
+
+tasks:
+  gen_spec:
+    aliases:
+      - gs
+    cmds:
+      - cd spec && tsp compile . --emit=@typespec/openapi3 && cd .. && go generate ./spec/tsp-output/schema
+
+  migrate:
+    cmds:
+      - goose postgres -dir migrations up

@@ -8,8 +8,8 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
+	domain "github.com/liriquew/test_task/internal/domain"
 	"github.com/liriquew/test_task/internal/lib/config"
-	"github.com/liriquew/test_task/internal/models"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
@@ -43,6 +43,10 @@ func New(cfg config.StorageConfig) *Repository {
 	}
 }
 
+func (r *Repository) Close() error {
+	return r.Close()
+}
+
 var (
 	ErrNotFound       = errors.New("user not found")
 	ErrUsernameExists = errors.New("user with this username already exists")
@@ -51,57 +55,79 @@ var (
 	ErrEmptyUpdate = errors.New("empty fields, nothing to update")
 )
 
-func (s *Repository) ListUsers(ctx context.Context) ([]models.User, error) {
-	var res []models.User
+const (
+	usernameConstraint = "users_username_key"
+	emailConstraint    = "users_email_key"
+)
+
+func UUID(id domain.UUID) string {
+	return uuid.UUID(id).String()
+}
+
+func (s *Repository) ListUsers(ctx context.Context) ([]domain.User, error) {
+	var users []DBUser
 
 	query := `
 		SELECT * FROM users
 	`
 
-	if err := s.db.SelectContext(ctx, &res, query); err != nil {
+	if err := s.db.SelectContext(ctx, &users, query); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return res, nil
+			return []domain.User{}, nil
 		}
 
 		return nil, err
+	}
+
+	res := make([]domain.User, 0, len(users))
+	for _, user := range users {
+		res = append(res, ConvertDBUserToUser(user))
 	}
 
 	return res, nil
 }
 
-func (s *Repository) CreateUser(ctx context.Context, user models.User) (*uuid.UUID, error) {
+func (s *Repository) CreateUser(ctx context.Context, user *domain.User) (*domain.UUID, error) {
 	query := `
 		INSERT INTO users (username, email, password, is_admin) VALUES
 		($1, $2, $3, $4) RETURNING id
 	`
 
+	var id uuid.UUID
 	err := s.db.QueryRowContext(ctx, query,
-		user.Username,
-		user.Email,
-		user.Password,
-		user.Admin,
-	).Scan(&user.Id)
+		user.Username.Value,
+		user.Email.Value,
+		user.Password.Value,
+		user.IsAdmin.Value,
+	).Scan(&id)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			switch pqErr.Code {
 			case "23505":
-				return nil, ErrUsernameExists
+				switch pqErr.Constraint {
+				case usernameConstraint:
+					return nil, ErrUsernameExists
+				case emailConstraint:
+					return nil, ErrEmailExists
+				}
 			}
 		}
 		return nil, err
 	}
 
-	return &user.Id, nil
+	user.ID = domain.NewOptUUID(domain.UUID(id))
+
+	return &user.ID.Value, nil
 }
 
-func (s *Repository) GetUserById(ctx context.Context, id uuid.UUID) (*models.User, error) {
+func (s *Repository) GetUserById(ctx context.Context, id domain.UUID) (*domain.User, error) {
 	query := `
 		SELECT * FROM users
 		WHERE id = $1
 	`
 
-	user := models.User{}
-	err := s.db.GetContext(ctx, &user, query, id)
+	user := DBUser{}
+	err := s.db.GetContext(ctx, &user, query, UUID(id))
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, ErrNotFound
@@ -109,10 +135,12 @@ func (s *Repository) GetUserById(ctx context.Context, id uuid.UUID) (*models.Use
 		return nil, err
 	}
 
-	return &user, nil
+	res := ConvertDBUserToUser(user)
+
+	return &res, nil
 }
 
-func (s *Repository) UpdateUser(ctx context.Context, user models.User) error {
+func (s *Repository) UpdateUser(ctx context.Context, user *domain.User) error {
 	query := `
 		UPDATE users SET %s WHERE id=$%d
 	`
@@ -121,7 +149,7 @@ func (s *Repository) UpdateUser(ctx context.Context, user models.User) error {
 	if err != nil {
 		return err
 	}
-	args = append(args, user.Id)
+	args = append(args, UUID(user.ID.Value))
 
 	query = fmt.Sprintf(query, queryParams, len(args))
 
@@ -130,7 +158,12 @@ func (s *Repository) UpdateUser(ctx context.Context, user models.User) error {
 		if pqErr, ok := err.(*pq.Error); ok {
 			switch pqErr.Code {
 			case "23505":
-				return ErrUsernameExists
+				switch pqErr.Constraint {
+				case usernameConstraint:
+					return ErrUsernameExists
+				case emailConstraint:
+					return ErrEmailExists
+				}
 			}
 		}
 		return err
@@ -147,13 +180,13 @@ func (s *Repository) UpdateUser(ctx context.Context, user models.User) error {
 	return nil
 }
 
-func (s *Repository) DeleteUser(ctx context.Context, id uuid.UUID) error {
+func (s *Repository) DeleteUser(ctx context.Context, id domain.UUID) error {
 	query := `
 		DELETE FROM users
 		WHERE id=$1
 	`
 
-	_, err := s.db.ExecContext(ctx, query, id)
+	_, err := s.db.ExecContext(ctx, query, UUID(id))
 	if err != nil {
 		return err
 	}
@@ -161,13 +194,13 @@ func (s *Repository) DeleteUser(ctx context.Context, id uuid.UUID) error {
 	return nil
 }
 
-func (s *Repository) GetUserByUsername(ctx context.Context, username string) (*models.User, error) {
+func (s *Repository) GetUserByUsername(ctx context.Context, username string) (*domain.User, error) {
 	query := `
 		SELECT * FROM users
 		WHERE username=$1
 	`
 
-	user := models.User{}
+	user := DBUser{}
 	err := s.db.GetContext(ctx, &user, query, username)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -176,24 +209,27 @@ func (s *Repository) GetUserByUsername(ctx context.Context, username string) (*m
 		return nil, err
 	}
 
-	return &user, nil
+	res := ConvertDBUserToUser(user)
+
+	return &res, nil
 }
 
-func (s *Repository) buildUpdate(user models.User) (queryParams string, args []any, err error) {
+func (s *Repository) buildUpdate(user *domain.User) (queryParams string, args []any, err error) {
 	sb := strings.Builder{}
 
-	if user.Username != "" {
-		args = append(args, user.Username)
+	if user.Username.IsSet() {
+		args = append(args, user.Username.Value)
 		sb.WriteString(fmt.Sprintf("username=$%d, ", len(args)))
 	}
-	if user.Email != "" {
-		args = append(args, user.Email)
+	if user.Email.IsSet() {
+		args = append(args, user.Email.Value)
 		sb.WriteString(fmt.Sprintf("email=$%d, ", len(args)))
 	}
-	if user.Admin.Valid() {
-		args = append(args, user.Admin.Bool)
+	if user.IsAdmin.IsSet() {
+		args = append(args, user.IsAdmin.Value)
 		sb.WriteString(fmt.Sprintf("is_admin=$%d, ", len(args)))
 	}
+
 	if len(args) == 0 {
 		return "", nil, ErrEmptyUpdate
 	}

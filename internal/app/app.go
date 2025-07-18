@@ -3,29 +3,48 @@ package app
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log/slog"
 	"net/http"
 
-	"github.com/liriquew/test_task/internal/app/api"
+	domain "github.com/liriquew/test_task/internal/domain"
 	"github.com/liriquew/test_task/internal/lib/config"
 	"github.com/liriquew/test_task/internal/repository"
 	"github.com/liriquew/test_task/internal/service"
 )
 
 type App struct {
-	srv *http.Server
-	cfg config.AppConfig
+	srv     *http.Server
+	closers []func() error
 }
 
 func New(log *slog.Logger, cfg config.AppConfig) App {
 	storage := repository.New(cfg.Storage)
 
-	service := service.New(log, storage)
+	srvs := service.New(log, storage)
 
-	server := api.New(cfg, service)
+	mdlwr := service.NewMiddleware(log, storage)
+
+	server, err := domain.NewServer(srvs, mdlwr, []domain.ServerOption{
+		domain.WithMiddleware(
+			service.Logging(log),
+			mdlwr.CheckAdminPermission(),
+		),
+	}...)
+	if err != nil {
+		panic(err)
+	}
+
+	addr := fmt.Sprintf("%s:%d", cfg.API.Host, cfg.API.Port)
 
 	return App{
-		srv: server,
+		srv: &http.Server{
+			Handler: server,
+			Addr:    addr,
+		},
+		closers: []func() error{
+			storage.Close,
+		},
 	}
 }
 

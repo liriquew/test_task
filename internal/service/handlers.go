@@ -1,210 +1,212 @@
 package service
 
 import (
+	"context"
 	"encoding/base64"
 	"errors"
-	"net/http"
+	"fmt"
 
-	"github.com/google/uuid"
-	"github.com/liriquew/test_task/internal/lib/jsontools"
-	"github.com/liriquew/test_task/internal/models"
+	domain "github.com/liriquew/test_task/internal/domain"
 	"github.com/liriquew/test_task/internal/repository"
 	"github.com/liriquew/test_task/pkg/logger/sl"
 	"golang.org/x/crypto/bcrypt"
 )
 
-func (s *Service) ListUsers(w http.ResponseWriter, r *http.Request) {
-	users, err := s.repo.ListUsers(r.Context())
+func (s *Service) Health(ctx context.Context) error {
+	return nil
+}
+
+func (s *Service) ServiceListUsers(ctx context.Context) (
+	domain.ServiceListUsersRes,
+	error,
+) {
+	users, err := s.repo.ListUsers(ctx)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
+		return &domain.InternalServerError{}, nil
 	}
 
 	for i := range users {
-		users[i].Password = ""
+		users[i].Password.Value = ""
 	}
 
-	jsontools.Encode(w, users)
+	res := domain.ServiceListUsersOKApplicationJSON(users)
+
+	return &res, nil
 }
 
-func (s *Service) CreateUser(w http.ResponseWriter, r *http.Request) {
-	user := models.User{}
-	if err := jsontools.Decode(r.Body, &user); err != nil {
-		s.log.Warn("error while decoding user in CreateUser", sl.Err(err))
-		w.WriteHeader(http.StatusBadRequest)
-		return
+func (s *Service) ServiceCreateUser(
+	ctx context.Context,
+	user *domain.User,
+) (domain.ServiceCreateUserRes, error) {
+	if user.Username.Value == "" {
+		return &domain.ValidationError{
+			Message: "empty username",
+		}, nil
+	}
+	if user.Password.Value == "" {
+		return &domain.ValidationError{
+			Message: "empty password",
+		}, nil
+	}
+	if user.Email.Value == "" {
+		return &domain.ValidationError{
+			Message: "empty email",
+		}, nil
 	}
 
-	if user.Username == "" {
-		http.Error(w, "empty username", http.StatusBadRequest)
-		return
-	}
-	if user.Password == "" {
-		http.Error(w, "empty password", http.StatusBadRequest)
-		return
-	}
-	if user.Email == "" {
-		http.Error(w, "empty email", http.StatusBadRequest)
-		return
-	}
-
-	passwordHash, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+	passwordHash, err := bcrypt.GenerateFromPassword([]byte(user.Password.Value), bcrypt.DefaultCost)
 	if err != nil {
 		s.log.Warn("error while generating password hash", sl.Err(err))
-		w.WriteHeader(http.StatusInternalServerError)
-		return
+		return &domain.InternalServerError{
+			Message: domain.InternalServerErrorMessage(
+				fmt.Sprintf("error while generating password hash error: %s", err),
+			),
+		}, nil
 	}
-	user.Password = base64.StdEncoding.EncodeToString(passwordHash)
+	user.Password.Value = base64.StdEncoding.EncodeToString(passwordHash)
 
-	id, err := s.repo.CreateUser(r.Context(), user)
+	_, err = s.repo.CreateUser(ctx, user)
 	if err != nil {
 		s.log.Warn("error while creating user", sl.Err(err))
 		if errors.Is(err, repository.ErrUsernameExists) {
-			http.Error(w, "username already taken", http.StatusConflict)
-			return
+			return &domain.AlreadyExists{
+				Message: "username already exists",
+			}, nil
 		}
 		if errors.Is(err, repository.ErrEmailExists) {
-			http.Error(w, "email already taken", http.StatusConflict)
-			return
+			return &domain.AlreadyExists{
+				Message: "email already exists",
+			}, nil
 		}
 
-		w.WriteHeader(http.StatusInternalServerError)
-		return
+		return &domain.InternalServerError{
+			Message: domain.InternalServerErrorMessage(
+				fmt.Sprintf("internal error while creating user error: %s", err),
+			),
+		}, nil
 	}
 
-	resp := struct {
-		Id uuid.UUID `json:"id"`
-	}{
-		Id: *id,
-	}
-	w.WriteHeader(http.StatusCreated)
-	jsontools.Encode(w, resp)
+	return user, nil
 }
 
-func (s *Service) GetUser(w http.ResponseWriter, r *http.Request) {
-	userId, err := GetUserIdParam(r)
-	if err != nil {
-		s.log.Warn("error while getting userId param in GetUser", sl.Err(err))
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
-	user, err := s.repo.GetUserById(r.Context(), userId)
+func (s *Service) ServiceGetUser(
+	ctx context.Context,
+	params domain.ServiceGetUserParams,
+) (domain.ServiceGetUserRes, error) {
+	user, err := s.repo.GetUserById(ctx, params.UserId)
 	if err != nil {
 		s.log.Warn("error while getting user by id", sl.Err(err))
 		if errors.Is(err, repository.ErrNotFound) {
-			w.WriteHeader(http.StatusNotFound)
-			return
+			return &domain.NotFound{
+				Message: "user not found",
+			}, nil
 		}
 
-		w.WriteHeader(http.StatusInternalServerError)
-		return
+		return &domain.InternalServerError{
+			Message: domain.InternalServerErrorMessage(
+				fmt.Sprintf("internal error: %s", err),
+			),
+		}, nil
 	}
 
-	jsontools.Encode(w, user)
+	return user, nil
 }
 
-func (s *Service) DeleteUser(w http.ResponseWriter, r *http.Request) {
-	userId, err := GetUserIdParam(r)
-	if err != nil {
-		s.log.Warn("error while getting userId param in DeleteUser", sl.Err(err))
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
-	err = s.repo.DeleteUser(r.Context(), userId)
+func (s *Service) ServiceDeleteUser(
+	ctx context.Context,
+	params domain.ServiceDeleteUserParams,
+) (domain.ServiceDeleteUserRes, error) {
+	err := s.repo.DeleteUser(ctx, params.UserId)
 	if err != nil {
 		s.log.Warn("error while deleting user", sl.Err(err))
-		if errors.Is(err, repository.ErrNotFound) {
-			w.WriteHeader(http.StatusOK)
-			return
-		}
+		// TODO: check repo layer error
 
-		w.WriteHeader(http.StatusInternalServerError)
-		return
+		// if errors.Is(err, repository.ErrNotFound) {
+		// 	return domain.NotFoundError{
+		// 		Message: domain.NotFoundMessage,
+		// 	}, nil
+		// }
+
+		return &domain.InternalServerError{
+			Message: domain.InternalServerErrorMessage(
+				fmt.Sprintf("internal error: %s", err),
+			),
+		}, nil
 	}
 
-	w.WriteHeader(http.StatusOK)
+	return &domain.ServiceDeleteUserOK{}, nil
 }
 
-func (s *Service) PatchUser(w http.ResponseWriter, r *http.Request) {
-	user := models.User{}
-	if err := jsontools.Decode(r.Body, &user); err != nil {
-		s.log.Warn("error while decoding body in PatchUser", sl.Err(err))
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
+func (s *Service) ServicePatchUser(
+	ctx context.Context,
+	user *domain.User,
+	params domain.ServicePatchUserParams,
+) (domain.ServicePatchUserRes, error) {
+	user.ID.Value = params.UserId
 
-	userId, err := GetUserIdParam(r)
-	if err != nil {
-		s.log.Warn("error while getting userId param in DeleteUser", sl.Err(err))
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	user.Id = userId
-
-	if err := s.repo.UpdateUser(r.Context(), user); err != nil {
+	if err := s.repo.UpdateUser(ctx, user); err != nil {
 		s.log.Warn("error while patching user PatchUser", sl.Err(err))
 		if errors.Is(err, repository.ErrUsernameExists) {
-			http.Error(w, "username already taken", http.StatusConflict)
-			return
+			return &domain.AlreadyExists{
+				Message: "username already exists",
+			}, nil
 		}
 		if errors.Is(err, repository.ErrEmailExists) {
-			http.Error(w, "email already taken", http.StatusConflict)
-			return
+			return &domain.AlreadyExists{
+				Message: "email already exists",
+			}, nil
 		}
 
-		w.WriteHeader(http.StatusInternalServerError)
-		return
+		return &domain.InternalServerError{
+			Message: domain.InternalServerErrorMessage(
+				fmt.Sprintf("internal error: %s", err),
+			),
+		}, nil
 	}
 
-	w.WriteHeader(http.StatusOK)
+	return &domain.ServicePatchUserOK{}, nil
 }
 
-func (s *Service) PutUser(w http.ResponseWriter, r *http.Request) {
-	userId, err := GetUserIdParam(r)
-	if err != nil {
-		s.log.Warn("error while getting userId param in DeleteUser", sl.Err(err))
-		w.WriteHeader(http.StatusBadRequest)
-		return
+func (s *Service) ServicePutUser(
+	ctx context.Context,
+	user *domain.User,
+	params domain.ServicePutUserParams,
+) (domain.ServicePutUserRes, error) {
+	if user.Username.Value == "" {
+		return &domain.ValidationError{
+			Message: "empty username",
+		}, nil
+	}
+	if user.Password.Value == "" {
+		return &domain.ValidationError{
+			Message: "empty username",
+		}, nil
+	}
+	if user.Email.Value == "" {
+		return &domain.ValidationError{
+			Message: "empty username",
+		}, nil
 	}
 
-	newUser := models.User{
-		Id: userId,
-	}
-	if err := jsontools.Decode(r.Body, &newUser); err != nil {
-		s.log.Warn("error while decoding body in PatchUser", sl.Err(err))
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
-	if newUser.Username == "" {
-		http.Error(w, "empty username", http.StatusBadRequest)
-		return
-	}
-	if newUser.Password == "" {
-		http.Error(w, "empty password", http.StatusBadRequest)
-		return
-	}
-	if newUser.Email == "" {
-		http.Error(w, "empty email", http.StatusBadRequest)
-		return
-	}
-
-	if err := s.repo.UpdateUser(r.Context(), newUser); err != nil {
+	if err := s.repo.UpdateUser(ctx, user); err != nil {
 		s.log.Warn("error while updating user in PutUser", sl.Err(err))
 		if errors.Is(err, repository.ErrUsernameExists) {
-			http.Error(w, "username already taken", http.StatusConflict)
-			return
+			return &domain.AlreadyExists{
+				Message: "username already exists",
+			}, nil
 		}
 		if errors.Is(err, repository.ErrEmailExists) {
-			http.Error(w, "email already taken", http.StatusConflict)
-			return
+			return &domain.AlreadyExists{
+				Message: "email already exists",
+			}, nil
 		}
 
-		w.WriteHeader(http.StatusInternalServerError)
-		return
+		return &domain.InternalServerError{
+			Message: domain.InternalServerErrorMessage(
+				fmt.Sprintf("internal error: %s", err),
+			),
+		}, nil
 	}
 
-	w.WriteHeader(http.StatusOK)
+	return &domain.ServicePutUserOK{}, nil
 }

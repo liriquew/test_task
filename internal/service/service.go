@@ -4,19 +4,18 @@ import (
 	"context"
 	"log/slog"
 
-	"github.com/google/uuid"
-	"github.com/liriquew/test_task/internal/models"
+	domain "github.com/liriquew/test_task/internal/domain"
 )
 
 type Repository interface {
-	ListUsers(context.Context) ([]models.User, error)
+	ListUsers(context.Context) ([]domain.User, error)
 
-	CreateUser(context.Context, models.User) (*uuid.UUID, error)
-	GetUserById(context.Context, uuid.UUID) (*models.User, error)
-	UpdateUser(context.Context, models.User) error
-	DeleteUser(context.Context, uuid.UUID) error
+	CreateUser(context.Context, *domain.User) (*domain.UUID, error)
+	GetUserById(context.Context, domain.UUID) (*domain.User, error)
+	UpdateUser(context.Context, *domain.User) error
+	DeleteUser(context.Context, domain.UUID) error
 
-	GetUserByUsername(context.Context, string) (*models.User, error)
+	GetUserByUsername(context.Context, string) (*domain.User, error)
 }
 
 type Service struct {
@@ -28,5 +27,17 @@ func New(log *slog.Logger, repo Repository) *Service {
 	return &Service{
 		repo: repo,
 		log:  log,
+	}
+}
+
+type UserServiceMiddleware struct {
+	log  *slog.Logger
+	repo Repository
+}
+
+func NewMiddleware(log *slog.Logger, repo Repository) *UserServiceMiddleware {
+	return &UserServiceMiddleware{
+		log:  log,
+		repo: repo,
 	}
 }

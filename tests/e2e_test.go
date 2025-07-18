@@ -2,7 +2,6 @@ package tests
 
 import (
 	"bytes"
-	"database/sql"
 	"fmt"
 	"io"
 	"net/http"
@@ -13,8 +12,8 @@ import (
 
 	"github.com/brianvoe/gofakeit/v6"
 	uuid "github.com/google/uuid"
+	domain "github.com/liriquew/test_task/internal/domain"
 	"github.com/liriquew/test_task/internal/lib/config"
-	"github.com/liriquew/test_task/internal/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -31,41 +30,62 @@ func TestMain(m *testing.M) {
 	m.Run()
 }
 
-func GetRandomUser() *models.User {
-	return &models.User{
-		Username: gofakeit.Username(),
-		Password: gofakeit.AppName(),
-		Email:    gofakeit.Email(),
-		Admin: models.Bool{
-			NullBool: sql.NullBool{
-				Bool:  false,
-				Valid: true,
-			},
+func Copy(u *domain.User) *domain.User {
+	return &domain.User{
+		ID:       u.ID,
+		Username: u.Username,
+		Password: u.Password,
+		Email:    u.Email,
+		IsAdmin:  u.IsAdmin,
+	}
+}
+
+func GetRandomUser() *domain.User {
+	return &domain.User{
+		Username: domain.NewOptString(gofakeit.Username()),
+		Password: domain.NewOptString(gofakeit.AppName()),
+		Email:    domain.NewOptString(gofakeit.Email()),
+		IsAdmin: domain.OptBool{
+			Value: false,
+			Set:   true,
 		},
 	}
 }
 
-func GetAuthHeader(user *models.User) map[string]string {
+func GetDefaultAdmin() *domain.User {
+	return &domain.User{
+		Username: domain.NewOptString("admin"),
+		Email:    domain.NewOptString("admin@admin.ru"),
+		Password: domain.NewOptString("admin"),
+		IsAdmin: domain.OptBool{
+			Value: true,
+			Set:   true,
+		},
+	}
+}
+
+func GetAuthHeader(user *domain.User) map[string]string {
 	value := base64.StdEncoding.EncodeToString(fmt.Appendf(nil,
-		"%s:%s", user.Username, user.Password),
+		"%s:%s", user.Username.Value, user.Password.Value),
 	)
 
 	return map[string]string{
 		"Authorization": "Basic " + value,
+		"Content-Type":  "application/json",
 	}
 }
 
-func CreateUser(t *testing.T, user *models.User) uuid.UUID {
+func CreateUser(t *testing.T, user *domain.User) uuid.UUID {
 	const url = "users/"
 	var id Id
-	DoRequest(t, "POST", url, user, GetAuthHeader(models.GetDefaultAdmin()), 201, &id)
+	DoRequest(t, "POST", url, user, GetAuthHeader(GetDefaultAdmin()), 201, &id)
 	return id.Id
 }
 
-func GetUser(t *testing.T, id uuid.UUID) models.User {
+func GetUser(t *testing.T, id uuid.UUID) domain.User {
 	url := fmt.Sprintf("users/%s", id.String())
-	user := models.User{}
-	DoRequest(t, "GET", url, nil, GetAuthHeader(models.GetDefaultAdmin()), 200, &user)
+	user := domain.User{}
+	DoRequest(t, "GET", url, nil, GetAuthHeader(GetDefaultAdmin()), 200, &user)
 	return user
 }
 
@@ -94,7 +114,11 @@ func DoRequest(t *testing.T, method, url string, body any, header map[string]str
 	defer resp.Body.Close()
 
 	if code != 0 {
-		require.Equal(t, code, resp.StatusCode)
+		if ok := assert.Equal(t, code, resp.StatusCode); !ok {
+			body, err := io.ReadAll(resp.Body)
+			fmt.Println(string(body), err)
+			t.Fail()
+		}
 	}
 
 	if respBody != nil {
@@ -111,7 +135,7 @@ func TestCreateUser(t *testing.T) {
 	t.Run("New user", func(t *testing.T) {
 		t.Parallel()
 		var id Id
-		DoRequest(t, "POST", url, user, GetAuthHeader(models.GetDefaultAdmin()), 201, &id)
+		DoRequest(t, "POST", url, user, GetAuthHeader(GetDefaultAdmin()), 201, &id)
 		require.NotZero(t, id.Id)
 	})
 
@@ -120,8 +144,8 @@ func TestCreateUser(t *testing.T) {
 		var id Id
 		user := GetRandomUser()
 
-		DoRequest(t, "POST", url, user, GetAuthHeader(models.GetDefaultAdmin()), 201, &id)
-		DoRequest(t, "POST", url, user, GetAuthHeader(models.GetDefaultAdmin()), 409, nil)
+		DoRequest(t, "POST", url, user, GetAuthHeader(GetDefaultAdmin()), 201, &id)
+		DoRequest(t, "POST", url, user, GetAuthHeader(GetDefaultAdmin()), 409, nil)
 	})
 
 	t.Run("Forbidden", func(t *testing.T) {
@@ -129,7 +153,7 @@ func TestCreateUser(t *testing.T) {
 		var id Id
 		user := GetRandomUser()
 
-		DoRequest(t, "POST", url, user, GetAuthHeader(models.GetDefaultAdmin()), 201, &id)
+		DoRequest(t, "POST", url, user, GetAuthHeader(GetDefaultAdmin()), 201, &id)
 		DoRequest(t, "POST", url, user, GetAuthHeader(user), 403, nil)
 	})
 
@@ -143,18 +167,18 @@ func TestGetUser(t *testing.T) {
 	t.Parallel()
 	var id Id
 	user := GetRandomUser()
-	DoRequest(t, "POST", "users/", user, GetAuthHeader(models.GetDefaultAdmin()), 201, &id)
-	user.Id = id.Id
+	DoRequest(t, "POST", "users/", user, GetAuthHeader(GetDefaultAdmin()), 201, &id)
+	user.ID.SetTo(domain.UUID(id.Id))
 
 	t.Run("New user", func(t *testing.T) {
 		t.Parallel()
 		url := fmt.Sprintf("users/%s", id.Id.String())
-		newUser := models.User{}
-		DoRequest(t, "GET", url, nil, GetAuthHeader(models.GetDefaultAdmin()), 200, &newUser)
+		newUser := domain.User{}
+		DoRequest(t, "GET", url, nil, GetAuthHeader(GetDefaultAdmin()), 200, &newUser)
 		require.NotZero(t, id.Id)
-		newUser.Password = ""
-		userToCheck := user.Copy()
-		userToCheck.Password = ""
+		newUser.Password.Value = ""
+		userToCheck := Copy(user)
+		userToCheck.Password.Value = ""
 
 		assert.Equal(t, *userToCheck, newUser)
 	})
@@ -170,7 +194,7 @@ func TestGetUser(t *testing.T) {
 
 		id, _ := uuid.NewV7()
 		url := fmt.Sprintf("users/%s", id.String())
-		DoRequest(t, "GET", url, nil, GetAuthHeader(models.GetDefaultAdmin()), 404, nil)
+		DoRequest(t, "GET", url, nil, GetAuthHeader(GetDefaultAdmin()), 404, nil)
 	})
 
 	t.Run("Forbidden", func(t *testing.T) {
@@ -189,19 +213,20 @@ func TestPatchUser(t *testing.T) {
 		t.Parallel()
 
 		user := GetRandomUser()
-		user.Id = CreateUser(t, user)
+		id := CreateUser(t, user)
+		user.ID.SetTo(domain.UUID(id))
 
-		url := fmt.Sprintf("users/%s", user.Id.String())
-		user.Username = gofakeit.Username()
-		user.Email = gofakeit.Email()
-		DoRequest(t, "PATCH", url, models.User{
+		url := fmt.Sprintf("users/%s", id.String())
+		user.Username.SetTo(gofakeit.Username())
+		user.Email.SetTo(gofakeit.Email())
+		DoRequest(t, "PATCH", url, &domain.User{
 			Username: user.Username,
 			Email:    user.Email,
-		}, GetAuthHeader(models.GetDefaultAdmin()), 200, nil)
+		}, GetAuthHeader(GetDefaultAdmin()), 200, nil)
 
-		patchedUser := GetUser(t, user.Id)
-		user.Password = ""
-		patchedUser.Password = ""
+		patchedUser := GetUser(t, id)
+		user.Password.Value = ""
+		patchedUser.Password.Value = ""
 
 		assert.Equal(t, *user, patchedUser)
 	})
@@ -214,17 +239,18 @@ func TestPutUser(t *testing.T) {
 		t.Parallel()
 
 		user := GetRandomUser()
-		user.Id = CreateUser(t, user)
+		id := CreateUser(t, user)
+		user.ID.SetTo(domain.UUID(id))
 
 		newUser := GetRandomUser()
-		newUser.Id = user.Id
+		newUser.ID = user.ID
 
-		url := fmt.Sprintf("users/%s", user.Id.String())
-		DoRequest(t, "PUT", url, newUser, GetAuthHeader(models.GetDefaultAdmin()), 200, nil)
+		url := fmt.Sprintf("users/%s", id.String())
+		DoRequest(t, "PUT", url, newUser, GetAuthHeader(GetDefaultAdmin()), 200, nil)
 
-		updatedUser := GetUser(t, user.Id)
-		newUser.Password = ""
-		updatedUser.Password = ""
+		updatedUser := GetUser(t, id)
+		newUser.Password.Value = ""
+		updatedUser.Password.Value = ""
 		assert.Equal(t, *newUser, updatedUser)
 	})
 }
@@ -236,12 +262,13 @@ func TestDeleteUser(t *testing.T) {
 		t.Parallel()
 
 		user := GetRandomUser()
-		user.Id = CreateUser(t, user)
+		id := CreateUser(t, user)
+		user.ID.SetTo(domain.UUID(id))
 
-		url := fmt.Sprintf("users/%s", user.Id.String())
-		DoRequest(t, "DELETE", url, nil, GetAuthHeader(models.GetDefaultAdmin()), 200, nil)
+		url := fmt.Sprintf("users/%s", id.String())
+		DoRequest(t, "DELETE", url, nil, GetAuthHeader(GetDefaultAdmin()), 200, nil)
 
-		DoRequest(t, "GET", url, nil, GetAuthHeader(models.GetDefaultAdmin()), 404, nil)
+		DoRequest(t, "GET", url, nil, GetAuthHeader(GetDefaultAdmin()), 404, nil)
 	})
 }
 
@@ -254,17 +281,19 @@ func TestListUsers(t *testing.T) {
 	for range cnt {
 		user := GetRandomUser()
 
-		user.Id = CreateUser(t, user)
+		id := CreateUser(t, user)
+		user.ID.SetTo(domain.UUID(id))
 
-		user.Password = ""
-		usersSet[user.Id] = 0
+		user.Password.Value = ""
+		usersSet[id] = 0
 	}
 
-	var resp []models.User
-	DoRequest(t, "GET", "users/", nil, GetAuthHeader(models.GetDefaultAdmin()), 200, &resp)
+	var resp []domain.User
+	DoRequest(t, "GET", "users/", nil, GetAuthHeader(GetDefaultAdmin()), 200, &resp)
 
 	for _, user := range resp {
-		usersSet[user.Id]++
+		id := uuid.UUID(user.ID.Value)
+		usersSet[id]++
 	}
 
 	for _, v := range usersSet {
