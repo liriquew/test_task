@@ -58,7 +58,7 @@ func (m *UserServiceMiddleware) CheckAdminPermission() middleware.Middleware {
 		}
 
 		return middleware.Response{
-			Type: &domain.Forbidden{},
+			Type: &domain.ForbiddenResponse{},
 		}, nil
 	}
 }
@@ -69,24 +69,24 @@ func Logging(logger *slog.Logger) middleware.Middleware {
 		req middleware.Request,
 		next func(req middleware.Request) (middleware.Response, error),
 	) (middleware.Response, error) {
-
-		return next(req)
-		logger.Info("info", slog.String("operation", req.OperationName))
+		attrs := []any{
+			slog.String("operation", req.OperationName),
+		}
 		logger := logger.With(
 			slog.String("operation", req.OperationName),
 			slog.String("operationId", req.OperationID),
 		)
-		logger.Info("Handling request")
 		resp, err := next(req)
 		if err != nil {
-			logger.Error("Fail", sl.Err(err))
+			attrs = append(attrs, sl.Err(err))
 		} else {
 			if tresp, ok := resp.Type.(interface{ GetStatusCode() int }); ok {
-				logger.Info("Success",
-					slog.Int("status_code", tresp.GetStatusCode()),
-				)
+				attrs = append(attrs, slog.Int("status_code", tresp.GetStatusCode()))
 			}
 		}
+
+		logger.Info("query", attrs...)
+
 		return resp, err
 	}
 }

@@ -74,7 +74,7 @@ func decodeServiceCreateUserResponse(resp *http.Response) (res ServiceCreateUser
 			}
 			d := jx.DecodeBytes(buf)
 
-			var response ValidationError
+			var response ValidationErrorResponse
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
 					return err
@@ -118,7 +118,7 @@ func decodeServiceCreateUserResponse(resp *http.Response) (res ServiceCreateUser
 			}
 			d := jx.DecodeBytes(buf)
 
-			var response Forbidden
+			var response ForbiddenResponse
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
 					return err
@@ -162,7 +162,7 @@ func decodeServiceCreateUserResponse(resp *http.Response) (res ServiceCreateUser
 			}
 			d := jx.DecodeBytes(buf)
 
-			var response AlreadyExists
+			var response AlreadyExistsResponse
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
 					return err
@@ -206,7 +206,7 @@ func decodeServiceCreateUserResponse(resp *http.Response) (res ServiceCreateUser
 			}
 			d := jx.DecodeBytes(buf)
 
-			var response InternalServerError
+			var response InternalErrorResponse
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
 					return err
@@ -259,7 +259,7 @@ func decodeServiceDeleteUserResponse(resp *http.Response) (res ServiceDeleteUser
 			}
 			d := jx.DecodeBytes(buf)
 
-			var response ValidationError
+			var response ValidationErrorResponse
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
 					return err
@@ -303,7 +303,7 @@ func decodeServiceDeleteUserResponse(resp *http.Response) (res ServiceDeleteUser
 			}
 			d := jx.DecodeBytes(buf)
 
-			var response Forbidden
+			var response ForbiddenResponse
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
 					return err
@@ -347,7 +347,7 @@ func decodeServiceDeleteUserResponse(resp *http.Response) (res ServiceDeleteUser
 			}
 			d := jx.DecodeBytes(buf)
 
-			var response InternalServerError
+			var response InternalErrorResponse
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
 					return err
@@ -432,7 +432,7 @@ func decodeServiceGetUserResponse(resp *http.Response) (res ServiceGetUserRes, _
 			}
 			d := jx.DecodeBytes(buf)
 
-			var response ValidationError
+			var response ValidationErrorResponse
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
 					return err
@@ -476,7 +476,7 @@ func decodeServiceGetUserResponse(resp *http.Response) (res ServiceGetUserRes, _
 			}
 			d := jx.DecodeBytes(buf)
 
-			var response Forbidden
+			var response ForbiddenResponse
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
 					return err
@@ -520,7 +520,7 @@ func decodeServiceGetUserResponse(resp *http.Response) (res ServiceGetUserRes, _
 			}
 			d := jx.DecodeBytes(buf)
 
-			var response NotFound
+			var response NotFoundResponse
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
 					return err
@@ -564,7 +564,7 @@ func decodeServiceGetUserResponse(resp *http.Response) (res ServiceGetUserRes, _
 			}
 			d := jx.DecodeBytes(buf)
 
-			var response InternalServerError
+			var response InternalErrorResponse
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
 					return err
@@ -658,7 +658,7 @@ func decodeServiceListUsersResponse(resp *http.Response) (res ServiceListUsersRe
 			}
 			d := jx.DecodeBytes(buf)
 
-			var response InternalServerError
+			var response InternalErrorResponse
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
 					return err
@@ -711,7 +711,7 @@ func decodeServicePatchUserResponse(resp *http.Response) (res ServicePatchUserRe
 			}
 			d := jx.DecodeBytes(buf)
 
-			var response ValidationError
+			var response ValidationErrorResponse
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
 					return err
@@ -755,7 +755,7 @@ func decodeServicePatchUserResponse(resp *http.Response) (res ServicePatchUserRe
 			}
 			d := jx.DecodeBytes(buf)
 
-			var response Forbidden
+			var response ForbiddenResponse
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
 					return err
@@ -799,7 +799,7 @@ func decodeServicePatchUserResponse(resp *http.Response) (res ServicePatchUserRe
 			}
 			d := jx.DecodeBytes(buf)
 
-			var response AlreadyExists
+			var response AlreadyExistsResponse
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
 					return err
@@ -843,7 +843,7 @@ func decodeServicePatchUserResponse(resp *http.Response) (res ServicePatchUserRe
 			}
 			d := jx.DecodeBytes(buf)
 
-			var response InternalServerError
+			var response InternalErrorResponse
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
 					return err
@@ -896,7 +896,7 @@ func decodeServicePutUserResponse(resp *http.Response) (res ServicePutUserRes, _
 			}
 			d := jx.DecodeBytes(buf)
 
-			var response ValidationError
+			var response ValidationErrorResponse
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
 					return err
@@ -940,7 +940,7 @@ func decodeServicePutUserResponse(resp *http.Response) (res ServicePutUserRes, _
 			}
 			d := jx.DecodeBytes(buf)
 
-			var response Forbidden
+			var response ForbiddenResponse
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
 					return err
@@ -984,7 +984,7 @@ func decodeServicePutUserResponse(resp *http.Response) (res ServicePutUserRes, _
 			}
 			d := jx.DecodeBytes(buf)
 
-			var response AlreadyExists
+			var response AlreadyExistsResponse
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
 					return err
@@ -1028,7 +1028,7 @@ func decodeServicePutUserResponse(resp *http.Response) (res ServicePutUserRes, _
 			}
 			d := jx.DecodeBytes(buf)
 
-			var response InternalServerError
+			var response InternalErrorResponse
 			if err := func() error {
 				if err := response.Decode(d); err != nil {
 					return err

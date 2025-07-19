@@ -32,29 +32,48 @@ func trimTrailingSlashes(u *url.URL) {
 type Invoker interface {
 	// Health invokes health operation.
 	//
-	// GET /ping
+	// GET /health
 	Health(ctx context.Context) error
 	// ServiceCreateUser invokes Service_createUser operation.
+	//
+	// Create a user
+	// - all fields must be provided, 400 otherwise
+	// - admin permission required.
 	//
 	// POST /users/
 	ServiceCreateUser(ctx context.Context, request *User) (ServiceCreateUserRes, error)
 	// ServiceDeleteUser invokes Service_deleteUser operation.
 	//
+	// Delete User
+	// - admin permission required.
+	//
 	// DELETE /users/{userId}
 	ServiceDeleteUser(ctx context.Context, params ServiceDeleteUserParams) (ServiceDeleteUserRes, error)
 	// ServiceGetUser invokes Service_getUser operation.
+	//
+	// Returns a User if user with provided userId exists, 404 otherwise.
 	//
 	// GET /users/{userId}
 	ServiceGetUser(ctx context.Context, params ServiceGetUserParams) (ServiceGetUserRes, error)
 	// ServiceListUsers invokes Service_listUsers operation.
 	//
+	// Returns a list of all users.
+	//
 	// GET /users/
 	ServiceListUsers(ctx context.Context) (ServiceListUsersRes, error)
 	// ServicePatchUser invokes Service_patchUser operation.
 	//
+	// Patch User
+	// - one of the fields must be provided, except id
+	// - admin permission required.
+	//
 	// PATCH /users/{userId}
 	ServicePatchUser(ctx context.Context, request *User, params ServicePatchUserParams) (ServicePatchUserRes, error)
 	// ServicePutUser invokes Service_putUser operation.
+	//
+	// Put a new User params
+	// - all fields must be provided, except id
+	// - admin permission required.
 	//
 	// PUT /users/{userId}
 	ServicePutUser(ctx context.Context, request *User, params ServicePutUserParams) (ServicePutUserRes, error)
@@ -107,7 +126,7 @@ func (c *Client) requestURL(ctx context.Context) *url.URL {
 
 // Health invokes health operation.
 //
-// GET /ping
+// GET /health
 func (c *Client) Health(ctx context.Context) error {
 	_, err := c.sendHealth(ctx)
 	return err
@@ -117,7 +136,7 @@ func (c *Client) sendHealth(ctx context.Context) (res *HealthOK, err error) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("health"),
 		semconv.HTTPRequestMethodKey.String("GET"),
-		semconv.HTTPRouteKey.String("/ping"),
+		semconv.HTTPRouteKey.String("/health"),
 	}
 
 	// Run stopwatch.
@@ -150,7 +169,7 @@ func (c *Client) sendHealth(ctx context.Context) (res *HealthOK, err error) {
 	stage = "BuildURL"
 	u := uri.Clone(c.requestURL(ctx))
 	var pathParts [1]string
-	pathParts[0] = "/ping"
+	pathParts[0] = "/health"
 	uri.AddPathParts(u, pathParts[:]...)
 
 	stage = "EncodeRequest"
@@ -176,6 +195,10 @@ func (c *Client) sendHealth(ctx context.Context) (res *HealthOK, err error) {
 }
 
 // ServiceCreateUser invokes Service_createUser operation.
+//
+// Create a user
+// - all fields must be provided, 400 otherwise
+// - admin permission required.
 //
 // POST /users/
 func (c *Client) ServiceCreateUser(ctx context.Context, request *User) (ServiceCreateUserRes, error) {
@@ -282,6 +305,9 @@ func (c *Client) sendServiceCreateUser(ctx context.Context, request *User) (res 
 }
 
 // ServiceDeleteUser invokes Service_deleteUser operation.
+//
+// Delete User
+// - admin permission required.
 //
 // DELETE /users/{userId}
 func (c *Client) ServiceDeleteUser(ctx context.Context, params ServiceDeleteUserParams) (ServiceDeleteUserRes, error) {
@@ -407,6 +433,8 @@ func (c *Client) sendServiceDeleteUser(ctx context.Context, params ServiceDelete
 
 // ServiceGetUser invokes Service_getUser operation.
 //
+// Returns a User if user with provided userId exists, 404 otherwise.
+//
 // GET /users/{userId}
 func (c *Client) ServiceGetUser(ctx context.Context, params ServiceGetUserParams) (ServiceGetUserRes, error) {
 	res, err := c.sendServiceGetUser(ctx, params)
@@ -531,6 +559,8 @@ func (c *Client) sendServiceGetUser(ctx context.Context, params ServiceGetUserPa
 
 // ServiceListUsers invokes Service_listUsers operation.
 //
+// Returns a list of all users.
+//
 // GET /users/
 func (c *Client) ServiceListUsers(ctx context.Context) (ServiceListUsersRes, error) {
 	res, err := c.sendServiceListUsers(ctx)
@@ -633,6 +663,10 @@ func (c *Client) sendServiceListUsers(ctx context.Context) (res ServiceListUsers
 }
 
 // ServicePatchUser invokes Service_patchUser operation.
+//
+// Patch User
+// - one of the fields must be provided, except id
+// - admin permission required.
 //
 // PATCH /users/{userId}
 func (c *Client) ServicePatchUser(ctx context.Context, request *User, params ServicePatchUserParams) (ServicePatchUserRes, error) {
@@ -760,6 +794,10 @@ func (c *Client) sendServicePatchUser(ctx context.Context, request *User, params
 }
 
 // ServicePutUser invokes Service_putUser operation.
+//
+// Put a new User params
+// - all fields must be provided, except id
+// - admin permission required.
 //
 // PUT /users/{userId}
 func (c *Client) ServicePutUser(ctx context.Context, request *User, params ServicePutUserParams) (ServicePutUserRes, error) {

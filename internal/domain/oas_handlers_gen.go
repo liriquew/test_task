@@ -32,14 +32,14 @@ func (c *codeRecorder) WriteHeader(status int) {
 
 // handleHealthRequest handles health operation.
 //
-// GET /ping
+// GET /health
 func (s *Server) handleHealthRequest(args [0]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
 	statusWriter := &codeRecorder{ResponseWriter: w}
 	w = statusWriter
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("health"),
 		semconv.HTTPRequestMethodKey.String("GET"),
-		semconv.HTTPRouteKey.String("/ping"),
+		semconv.HTTPRouteKey.String("/health"),
 	}
 
 	// Start a span for this request.
@@ -148,6 +148,10 @@ func (s *Server) handleHealthRequest(args [0]string, argsEscaped bool, w http.Re
 }
 
 // handleServiceCreateUserRequest handles Service_createUser operation.
+//
+// Create a user
+// - all fields must be provided, 400 otherwise
+// - admin permission required.
 //
 // POST /users/
 func (s *Server) handleServiceCreateUserRequest(args [0]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
@@ -329,6 +333,9 @@ func (s *Server) handleServiceCreateUserRequest(args [0]string, argsEscaped bool
 
 // handleServiceDeleteUserRequest handles Service_deleteUser operation.
 //
+// Delete User
+// - admin permission required.
+//
 // DELETE /users/{userId}
 func (s *Server) handleServiceDeleteUserRequest(args [1]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
 	statusWriter := &codeRecorder{ResponseWriter: w}
@@ -508,6 +515,8 @@ func (s *Server) handleServiceDeleteUserRequest(args [1]string, argsEscaped bool
 }
 
 // handleServiceGetUserRequest handles Service_getUser operation.
+//
+// Returns a User if user with provided userId exists, 404 otherwise.
 //
 // GET /users/{userId}
 func (s *Server) handleServiceGetUserRequest(args [1]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
@@ -689,6 +698,8 @@ func (s *Server) handleServiceGetUserRequest(args [1]string, argsEscaped bool, w
 
 // handleServiceListUsersRequest handles Service_listUsers operation.
 //
+// Returns a list of all users.
+//
 // GET /users/
 func (s *Server) handleServiceListUsersRequest(args [0]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
 	statusWriter := &codeRecorder{ResponseWriter: w}
@@ -853,6 +864,10 @@ func (s *Server) handleServiceListUsersRequest(args [0]string, argsEscaped bool,
 }
 
 // handleServicePatchUserRequest handles Service_patchUser operation.
+//
+// Patch User
+// - one of the fields must be provided, except id
+// - admin permission required.
 //
 // PATCH /users/{userId}
 func (s *Server) handleServicePatchUserRequest(args [1]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
@@ -1048,6 +1063,10 @@ func (s *Server) handleServicePatchUserRequest(args [1]string, argsEscaped bool,
 }
 
 // handleServicePutUserRequest handles Service_putUser operation.
+//
+// Put a new User params
+// - all fields must be provided, except id
+// - admin permission required.
 //
 // PUT /users/{userId}
 func (s *Server) handleServicePutUserRequest(args [1]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {

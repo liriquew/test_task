@@ -15,12 +15,16 @@ var _ Handler = UnimplementedHandler{}
 
 // Health implements health operation.
 //
-// GET /ping
+// GET /health
 func (UnimplementedHandler) Health(ctx context.Context) error {
 	return ht.ErrNotImplemented
 }
 
 // ServiceCreateUser implements Service_createUser operation.
+//
+// Create a user
+// - all fields must be provided, 400 otherwise
+// - admin permission required.
 //
 // POST /users/
 func (UnimplementedHandler) ServiceCreateUser(ctx context.Context, req *User) (r ServiceCreateUserRes, _ error) {
@@ -29,12 +33,17 @@ func (UnimplementedHandler) ServiceCreateUser(ctx context.Context, req *User) (r
 
 // ServiceDeleteUser implements Service_deleteUser operation.
 //
+// Delete User
+// - admin permission required.
+//
 // DELETE /users/{userId}
 func (UnimplementedHandler) ServiceDeleteUser(ctx context.Context, params ServiceDeleteUserParams) (r ServiceDeleteUserRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
 // ServiceGetUser implements Service_getUser operation.
+//
+// Returns a User if user with provided userId exists, 404 otherwise.
 //
 // GET /users/{userId}
 func (UnimplementedHandler) ServiceGetUser(ctx context.Context, params ServiceGetUserParams) (r ServiceGetUserRes, _ error) {
@@ -43,6 +52,8 @@ func (UnimplementedHandler) ServiceGetUser(ctx context.Context, params ServiceGe
 
 // ServiceListUsers implements Service_listUsers operation.
 //
+// Returns a list of all users.
+//
 // GET /users/
 func (UnimplementedHandler) ServiceListUsers(ctx context.Context) (r ServiceListUsersRes, _ error) {
 	return r, ht.ErrNotImplemented
@@ -50,12 +61,20 @@ func (UnimplementedHandler) ServiceListUsers(ctx context.Context) (r ServiceList
 
 // ServicePatchUser implements Service_patchUser operation.
 //
+// Patch User
+// - one of the fields must be provided, except id
+// - admin permission required.
+//
 // PATCH /users/{userId}
 func (UnimplementedHandler) ServicePatchUser(ctx context.Context, req *User, params ServicePatchUserParams) (r ServicePatchUserRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
 // ServicePutUser implements Service_putUser operation.
+//
+// Put a new User params
+// - all fields must be provided, except id
+// - admin permission required.
 //
 // PUT /users/{userId}
 func (UnimplementedHandler) ServicePutUser(ctx context.Context, req *User, params ServicePutUserParams) (r ServicePutUserRes, _ error) {

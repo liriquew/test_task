@@ -22,7 +22,7 @@ func (s *Service) ServiceListUsers(ctx context.Context) (
 ) {
 	users, err := s.repo.ListUsers(ctx)
 	if err != nil {
-		return &domain.InternalServerError{}, nil
+		return &domain.InternalErrorResponse{}, nil
 	}
 
 	for i := range users {
@@ -39,17 +39,17 @@ func (s *Service) ServiceCreateUser(
 	user *domain.User,
 ) (domain.ServiceCreateUserRes, error) {
 	if user.Username.Value == "" {
-		return &domain.ValidationError{
+		return &domain.ValidationErrorResponse{
 			Message: "empty username",
 		}, nil
 	}
 	if user.Password.Value == "" {
-		return &domain.ValidationError{
+		return &domain.ValidationErrorResponse{
 			Message: "empty password",
 		}, nil
 	}
 	if user.Email.Value == "" {
-		return &domain.ValidationError{
+		return &domain.ValidationErrorResponse{
 			Message: "empty email",
 		}, nil
 	}
@@ -57,8 +57,8 @@ func (s *Service) ServiceCreateUser(
 	passwordHash, err := bcrypt.GenerateFromPassword([]byte(user.Password.Value), bcrypt.DefaultCost)
 	if err != nil {
 		s.log.Warn("error while generating password hash", sl.Err(err))
-		return &domain.InternalServerError{
-			Message: domain.InternalServerErrorMessage(
+		return &domain.InternalErrorResponse{
+			Message: domain.InternalErrorResponseMessage(
 				fmt.Sprintf("error while generating password hash error: %s", err),
 			),
 		}, nil
@@ -69,18 +69,18 @@ func (s *Service) ServiceCreateUser(
 	if err != nil {
 		s.log.Warn("error while creating user", sl.Err(err))
 		if errors.Is(err, repository.ErrUsernameExists) {
-			return &domain.AlreadyExists{
+			return &domain.AlreadyExistsResponse{
 				Message: "username already exists",
 			}, nil
 		}
 		if errors.Is(err, repository.ErrEmailExists) {
-			return &domain.AlreadyExists{
+			return &domain.AlreadyExistsResponse{
 				Message: "email already exists",
 			}, nil
 		}
 
-		return &domain.InternalServerError{
-			Message: domain.InternalServerErrorMessage(
+		return &domain.InternalErrorResponse{
+			Message: domain.InternalErrorResponseMessage(
 				fmt.Sprintf("internal error while creating user error: %s", err),
 			),
 		}, nil
@@ -97,13 +97,13 @@ func (s *Service) ServiceGetUser(
 	if err != nil {
 		s.log.Warn("error while getting user by id", sl.Err(err))
 		if errors.Is(err, repository.ErrNotFound) {
-			return &domain.NotFound{
+			return &domain.NotFoundResponse{
 				Message: "user not found",
 			}, nil
 		}
 
-		return &domain.InternalServerError{
-			Message: domain.InternalServerErrorMessage(
+		return &domain.InternalErrorResponse{
+			Message: domain.InternalErrorResponseMessage(
 				fmt.Sprintf("internal error: %s", err),
 			),
 		}, nil
@@ -127,8 +127,8 @@ func (s *Service) ServiceDeleteUser(
 		// 	}, nil
 		// }
 
-		return &domain.InternalServerError{
-			Message: domain.InternalServerErrorMessage(
+		return &domain.InternalErrorResponse{
+			Message: domain.InternalErrorResponseMessage(
 				fmt.Sprintf("internal error: %s", err),
 			),
 		}, nil
@@ -147,18 +147,18 @@ func (s *Service) ServicePatchUser(
 	if err := s.repo.UpdateUser(ctx, user); err != nil {
 		s.log.Warn("error while patching user PatchUser", sl.Err(err))
 		if errors.Is(err, repository.ErrUsernameExists) {
-			return &domain.AlreadyExists{
+			return &domain.AlreadyExistsResponse{
 				Message: "username already exists",
 			}, nil
 		}
 		if errors.Is(err, repository.ErrEmailExists) {
-			return &domain.AlreadyExists{
+			return &domain.AlreadyExistsResponse{
 				Message: "email already exists",
 			}, nil
 		}
 
-		return &domain.InternalServerError{
-			Message: domain.InternalServerErrorMessage(
+		return &domain.InternalErrorResponse{
+			Message: domain.InternalErrorResponseMessage(
 				fmt.Sprintf("internal error: %s", err),
 			),
 		}, nil
@@ -173,17 +173,17 @@ func (s *Service) ServicePutUser(
 	params domain.ServicePutUserParams,
 ) (domain.ServicePutUserRes, error) {
 	if user.Username.Value == "" {
-		return &domain.ValidationError{
+		return &domain.ValidationErrorResponse{
 			Message: "empty username",
 		}, nil
 	}
 	if user.Password.Value == "" {
-		return &domain.ValidationError{
+		return &domain.ValidationErrorResponse{
 			Message: "empty username",
 		}, nil
 	}
 	if user.Email.Value == "" {
-		return &domain.ValidationError{
+		return &domain.ValidationErrorResponse{
 			Message: "empty username",
 		}, nil
 	}
@@ -191,18 +191,18 @@ func (s *Service) ServicePutUser(
 	if err := s.repo.UpdateUser(ctx, user); err != nil {
 		s.log.Warn("error while updating user in PutUser", sl.Err(err))
 		if errors.Is(err, repository.ErrUsernameExists) {
-			return &domain.AlreadyExists{
+			return &domain.ValidationErrorResponse{
 				Message: "username already exists",
 			}, nil
 		}
 		if errors.Is(err, repository.ErrEmailExists) {
-			return &domain.AlreadyExists{
+			return &domain.ValidationErrorResponse{
 				Message: "email already exists",
 			}, nil
 		}
 
-		return &domain.InternalServerError{
-			Message: domain.InternalServerErrorMessage(
+		return &domain.InternalErrorResponse{
+			Message: domain.InternalErrorResponseMessage(
 				fmt.Sprintf("internal error: %s", err),
 			),
 		}, nil

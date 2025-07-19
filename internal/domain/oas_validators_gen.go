@@ -8,86 +8,12 @@ import (
 	"github.com/ogen-go/ogen/validate"
 )
 
-func (s *AlreadyExists) Validate() error {
+func (s *AlreadyExistsResponse) Validate() error {
 	if s == nil {
 		return validate.ErrNilPointer
 	}
 
 	var failures []validate.FieldError
-	if err := func() error {
-		if err := s.Code.Validate(); err != nil {
-			return err
-		}
-		return nil
-	}(); err != nil {
-		failures = append(failures, validate.FieldError{
-			Name:  "code",
-			Error: err,
-		})
-	}
-	if err := func() error {
-		if err := s.Message.Validate(); err != nil {
-			return err
-		}
-		return nil
-	}(); err != nil {
-		failures = append(failures, validate.FieldError{
-			Name:  "message",
-			Error: err,
-		})
-	}
-	if err := func() error {
-		if s.Details == nil {
-			return errors.New("nil is invalid value")
-		}
-		return nil
-	}(); err != nil {
-		failures = append(failures, validate.FieldError{
-			Name:  "details",
-			Error: err,
-		})
-	}
-	if len(failures) > 0 {
-		return &validate.Error{Fields: failures}
-	}
-	return nil
-}
-
-func (s AlreadyExistsCode) Validate() error {
-	switch s {
-	case 409:
-		return nil
-	default:
-		return errors.Errorf("invalid value: %v", s)
-	}
-}
-
-func (s AlreadyExistsMessage) Validate() error {
-	switch s {
-	case "already exists":
-		return nil
-	default:
-		return errors.Errorf("invalid value: %v", s)
-	}
-}
-
-func (s *Forbidden) Validate() error {
-	if s == nil {
-		return validate.ErrNilPointer
-	}
-
-	var failures []validate.FieldError
-	if err := func() error {
-		if err := s.Code.Validate(); err != nil {
-			return err
-		}
-		return nil
-	}(); err != nil {
-		failures = append(failures, validate.FieldError{
-			Name:  "code",
-			Error: err,
-		})
-	}
 	if err := func() error {
 		if err := s.Message.Validate(); err != nil {
 			return err
@@ -105,16 +31,41 @@ func (s *Forbidden) Validate() error {
 	return nil
 }
 
-func (s ForbiddenCode) Validate() error {
+func (s AlreadyExistsResponseMessage) Validate() error {
 	switch s {
-	case 403:
+	case "already exists, username taken":
+		return nil
+	case "already exists, email taken":
 		return nil
 	default:
 		return errors.Errorf("invalid value: %v", s)
 	}
 }
 
-func (s ForbiddenMessage) Validate() error {
+func (s *ForbiddenResponse) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
+	var failures []validate.FieldError
+	if err := func() error {
+		if err := s.Message.Validate(); err != nil {
+			return err
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "message",
+			Error: err,
+		})
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+	return nil
+}
+
+func (s ForbiddenResponseMessage) Validate() error {
 	switch s {
 	case "forbidden, admin permission required":
 		return nil
@@ -123,23 +74,12 @@ func (s ForbiddenMessage) Validate() error {
 	}
 }
 
-func (s *InternalServerError) Validate() error {
+func (s *InternalErrorResponse) Validate() error {
 	if s == nil {
 		return validate.ErrNilPointer
 	}
 
 	var failures []validate.FieldError
-	if err := func() error {
-		if err := s.Code.Validate(); err != nil {
-			return err
-		}
-		return nil
-	}(); err != nil {
-		failures = append(failures, validate.FieldError{
-			Name:  "code",
-			Error: err,
-		})
-	}
 	if err := func() error {
 		if err := s.Message.Validate(); err != nil {
 			return err
@@ -157,16 +97,7 @@ func (s *InternalServerError) Validate() error {
 	return nil
 }
 
-func (s InternalServerErrorCode) Validate() error {
-	switch s {
-	case 500:
-		return nil
-	default:
-		return errors.Errorf("invalid value: %v", s)
-	}
-}
-
-func (s InternalServerErrorMessage) Validate() error {
+func (s InternalErrorResponseMessage) Validate() error {
 	switch s {
 	case "internal server error":
 		return nil
@@ -175,23 +106,12 @@ func (s InternalServerErrorMessage) Validate() error {
 	}
 }
 
-func (s *NotFound) Validate() error {
+func (s *NotFoundResponse) Validate() error {
 	if s == nil {
 		return validate.ErrNilPointer
 	}
 
 	var failures []validate.FieldError
-	if err := func() error {
-		if err := s.Code.Validate(); err != nil {
-			return err
-		}
-		return nil
-	}(); err != nil {
-		failures = append(failures, validate.FieldError{
-			Name:  "code",
-			Error: err,
-		})
-	}
 	if err := func() error {
 		if err := s.Message.Validate(); err != nil {
 			return err
@@ -209,16 +129,7 @@ func (s *NotFound) Validate() error {
 	return nil
 }
 
-func (s NotFoundCode) Validate() error {
-	switch s {
-	case 404:
-		return nil
-	default:
-		return errors.Errorf("invalid value: %v", s)
-	}
-}
-
-func (s NotFoundMessage) Validate() error {
+func (s NotFoundResponseMessage) Validate() error {
 	switch s {
 	case "not found":
 		return nil
@@ -235,23 +146,12 @@ func (s ServiceListUsersOKApplicationJSON) Validate() error {
 	return nil
 }
 
-func (s *ValidationError) Validate() error {
+func (s *ValidationErrorResponse) Validate() error {
 	if s == nil {
 		return validate.ErrNilPointer
 	}
 
 	var failures []validate.FieldError
-	if err := func() error {
-		if err := s.Code.Validate(); err != nil {
-			return err
-		}
-		return nil
-	}(); err != nil {
-		failures = append(failures, validate.FieldError{
-			Name:  "code",
-			Error: err,
-		})
-	}
 	if err := func() error {
 		if err := s.Message.Validate(); err != nil {
 			return err
@@ -263,33 +163,13 @@ func (s *ValidationError) Validate() error {
 			Error: err,
 		})
 	}
-	if err := func() error {
-		if s.Details == nil {
-			return errors.New("nil is invalid value")
-		}
-		return nil
-	}(); err != nil {
-		failures = append(failures, validate.FieldError{
-			Name:  "details",
-			Error: err,
-		})
-	}
 	if len(failures) > 0 {
 		return &validate.Error{Fields: failures}
 	}
 	return nil
 }
 
-func (s ValidationErrorCode) Validate() error {
-	switch s {
-	case 400:
-		return nil
-	default:
-		return errors.Errorf("invalid value: %v", s)
-	}
-}
-
-func (s ValidationErrorMessage) Validate() error {
+func (s ValidationErrorResponseMessage) Validate() error {
 	switch s {
 	case "bad params":
 		return nil

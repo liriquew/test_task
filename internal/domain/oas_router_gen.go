@@ -61,9 +61,9 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				break
 			}
 			switch elem[0] {
-			case 'p': // Prefix: "ping"
+			case 'h': // Prefix: "health"
 
-				if l := len("ping"); len(elem) >= l && elem[0:l] == "ping" {
+				if l := len("health"); len(elem) >= l && elem[0:l] == "health" {
 					elem = elem[l:]
 				} else {
 					break
@@ -230,9 +230,9 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 				break
 			}
 			switch elem[0] {
-			case 'p': // Prefix: "ping"
+			case 'h': // Prefix: "health"
 
-				if l := len("ping"); len(elem) >= l && elem[0:l] == "ping" {
+				if l := len("health"); len(elem) >= l && elem[0:l] == "health" {
 					elem = elem[l:]
 				} else {
 					break
@@ -245,7 +245,7 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 						r.name = HealthOperation
 						r.summary = ""
 						r.operationID = "health"
-						r.pathPattern = "/ping"
+						r.pathPattern = "/health"
 						r.args = args
 						r.count = 0
 						return r, true

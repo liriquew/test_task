@@ -10,29 +10,48 @@ import (
 type Handler interface {
 	// Health implements health operation.
 	//
-	// GET /ping
+	// GET /health
 	Health(ctx context.Context) error
 	// ServiceCreateUser implements Service_createUser operation.
+	//
+	// Create a user
+	// - all fields must be provided, 400 otherwise
+	// - admin permission required.
 	//
 	// POST /users/
 	ServiceCreateUser(ctx context.Context, req *User) (ServiceCreateUserRes, error)
 	// ServiceDeleteUser implements Service_deleteUser operation.
 	//
+	// Delete User
+	// - admin permission required.
+	//
 	// DELETE /users/{userId}
 	ServiceDeleteUser(ctx context.Context, params ServiceDeleteUserParams) (ServiceDeleteUserRes, error)
 	// ServiceGetUser implements Service_getUser operation.
+	//
+	// Returns a User if user with provided userId exists, 404 otherwise.
 	//
 	// GET /users/{userId}
 	ServiceGetUser(ctx context.Context, params ServiceGetUserParams) (ServiceGetUserRes, error)
 	// ServiceListUsers implements Service_listUsers operation.
 	//
+	// Returns a list of all users.
+	//
 	// GET /users/
 	ServiceListUsers(ctx context.Context) (ServiceListUsersRes, error)
 	// ServicePatchUser implements Service_patchUser operation.
 	//
+	// Patch User
+	// - one of the fields must be provided, except id
+	// - admin permission required.
+	//
 	// PATCH /users/{userId}
 	ServicePatchUser(ctx context.Context, req *User, params ServicePatchUserParams) (ServicePatchUserRes, error)
 	// ServicePutUser implements Service_putUser operation.
+	//
+	// Put a new User params
+	// - all fields must be provided, except id
+	// - admin permission required.
 	//
 	// PUT /users/{userId}
 	ServicePutUser(ctx context.Context, req *User, params ServicePutUserParams) (ServicePutUserRes, error)

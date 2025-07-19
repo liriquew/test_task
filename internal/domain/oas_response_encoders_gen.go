@@ -33,7 +33,7 @@ func encodeServiceCreateUserResponse(response ServiceCreateUserRes, w http.Respo
 
 		return nil
 
-	case *ValidationError:
+	case *ValidationErrorResponse:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(400)
 		span.SetStatus(codes.Error, http.StatusText(400))
@@ -46,7 +46,7 @@ func encodeServiceCreateUserResponse(response ServiceCreateUserRes, w http.Respo
 
 		return nil
 
-	case *Forbidden:
+	case *ForbiddenResponse:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(403)
 		span.SetStatus(codes.Error, http.StatusText(403))
@@ -59,7 +59,7 @@ func encodeServiceCreateUserResponse(response ServiceCreateUserRes, w http.Respo
 
 		return nil
 
-	case *AlreadyExists:
+	case *AlreadyExistsResponse:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(409)
 		span.SetStatus(codes.Error, http.StatusText(409))
@@ -72,7 +72,7 @@ func encodeServiceCreateUserResponse(response ServiceCreateUserRes, w http.Respo
 
 		return nil
 
-	case *InternalServerError:
+	case *InternalErrorResponse:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(500)
 		span.SetStatus(codes.Error, http.StatusText(500))
@@ -98,7 +98,7 @@ func encodeServiceDeleteUserResponse(response ServiceDeleteUserRes, w http.Respo
 
 		return nil
 
-	case *ValidationError:
+	case *ValidationErrorResponse:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(400)
 		span.SetStatus(codes.Error, http.StatusText(400))
@@ -111,7 +111,7 @@ func encodeServiceDeleteUserResponse(response ServiceDeleteUserRes, w http.Respo
 
 		return nil
 
-	case *Forbidden:
+	case *ForbiddenResponse:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(403)
 		span.SetStatus(codes.Error, http.StatusText(403))
@@ -124,7 +124,7 @@ func encodeServiceDeleteUserResponse(response ServiceDeleteUserRes, w http.Respo
 
 		return nil
 
-	case *InternalServerError:
+	case *InternalErrorResponse:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(500)
 		span.SetStatus(codes.Error, http.StatusText(500))
@@ -157,7 +157,7 @@ func encodeServiceGetUserResponse(response ServiceGetUserRes, w http.ResponseWri
 
 		return nil
 
-	case *ValidationError:
+	case *ValidationErrorResponse:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(400)
 		span.SetStatus(codes.Error, http.StatusText(400))
@@ -170,7 +170,7 @@ func encodeServiceGetUserResponse(response ServiceGetUserRes, w http.ResponseWri
 
 		return nil
 
-	case *Forbidden:
+	case *ForbiddenResponse:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(403)
 		span.SetStatus(codes.Error, http.StatusText(403))
@@ -183,7 +183,7 @@ func encodeServiceGetUserResponse(response ServiceGetUserRes, w http.ResponseWri
 
 		return nil
 
-	case *NotFound:
+	case *NotFoundResponse:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(404)
 		span.SetStatus(codes.Error, http.StatusText(404))
@@ -196,7 +196,7 @@ func encodeServiceGetUserResponse(response ServiceGetUserRes, w http.ResponseWri
 
 		return nil
 
-	case *InternalServerError:
+	case *InternalErrorResponse:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(500)
 		span.SetStatus(codes.Error, http.StatusText(500))
@@ -229,7 +229,7 @@ func encodeServiceListUsersResponse(response ServiceListUsersRes, w http.Respons
 
 		return nil
 
-	case *InternalServerError:
+	case *InternalErrorResponse:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(500)
 		span.SetStatus(codes.Error, http.StatusText(500))
@@ -255,7 +255,7 @@ func encodeServicePatchUserResponse(response ServicePatchUserRes, w http.Respons
 
 		return nil
 
-	case *ValidationError:
+	case *ValidationErrorResponse:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(400)
 		span.SetStatus(codes.Error, http.StatusText(400))
@@ -268,7 +268,7 @@ func encodeServicePatchUserResponse(response ServicePatchUserRes, w http.Respons
 
 		return nil
 
-	case *Forbidden:
+	case *ForbiddenResponse:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(403)
 		span.SetStatus(codes.Error, http.StatusText(403))
@@ -281,7 +281,7 @@ func encodeServicePatchUserResponse(response ServicePatchUserRes, w http.Respons
 
 		return nil
 
-	case *AlreadyExists:
+	case *AlreadyExistsResponse:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(409)
 		span.SetStatus(codes.Error, http.StatusText(409))
@@ -294,7 +294,7 @@ func encodeServicePatchUserResponse(response ServicePatchUserRes, w http.Respons
 
 		return nil
 
-	case *InternalServerError:
+	case *InternalErrorResponse:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(500)
 		span.SetStatus(codes.Error, http.StatusText(500))
@@ -320,7 +320,7 @@ func encodeServicePutUserResponse(response ServicePutUserRes, w http.ResponseWri
 
 		return nil
 
-	case *ValidationError:
+	case *ValidationErrorResponse:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(400)
 		span.SetStatus(codes.Error, http.StatusText(400))
@@ -333,7 +333,7 @@ func encodeServicePutUserResponse(response ServicePutUserRes, w http.ResponseWri
 
 		return nil
 
-	case *Forbidden:
+	case *ForbiddenResponse:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(403)
 		span.SetStatus(codes.Error, http.StatusText(403))
@@ -346,7 +346,7 @@ func encodeServicePutUserResponse(response ServicePutUserRes, w http.ResponseWri
 
 		return nil
 
-	case *AlreadyExists:
+	case *AlreadyExistsResponse:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(409)
 		span.SetStatus(codes.Error, http.StatusText(409))
@@ -359,7 +359,7 @@ func encodeServicePutUserResponse(response ServicePutUserRes, w http.ResponseWri
 
 		return nil
 
-	case *InternalServerError:
+	case *InternalErrorResponse:
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(500)
 		span.SetStatus(codes.Error, http.StatusText(500))

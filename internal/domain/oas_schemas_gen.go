@@ -7,77 +7,46 @@ import (
 	"github.com/google/uuid"
 )
 
-// Ref: #/components/schemas/AlreadyExists
-type AlreadyExists struct {
-	Code    AlreadyExistsCode    `json:"code"`
-	Message AlreadyExistsMessage `json:"message"`
-	Details []string             `json:"details"`
-}
-
-// GetCode returns the value of Code.
-func (s *AlreadyExists) GetCode() AlreadyExistsCode {
-	return s.Code
+// Ref: #/components/schemas/AlreadyExistsResponse
+type AlreadyExistsResponse struct {
+	Message AlreadyExistsResponseMessage `json:"message"`
 }
 
 // GetMessage returns the value of Message.
-func (s *AlreadyExists) GetMessage() AlreadyExistsMessage {
+func (s *AlreadyExistsResponse) GetMessage() AlreadyExistsResponseMessage {
 	return s.Message
 }
 
-// GetDetails returns the value of Details.
-func (s *AlreadyExists) GetDetails() []string {
-	return s.Details
-}
-
-// SetCode sets the value of Code.
-func (s *AlreadyExists) SetCode(val AlreadyExistsCode) {
-	s.Code = val
-}
-
 // SetMessage sets the value of Message.
-func (s *AlreadyExists) SetMessage(val AlreadyExistsMessage) {
+func (s *AlreadyExistsResponse) SetMessage(val AlreadyExistsResponseMessage) {
 	s.Message = val
 }
 
-// SetDetails sets the value of Details.
-func (s *AlreadyExists) SetDetails(val []string) {
-	s.Details = val
-}
+func (*AlreadyExistsResponse) serviceCreateUserRes() {}
+func (*AlreadyExistsResponse) servicePatchUserRes()  {}
+func (*AlreadyExistsResponse) servicePutUserRes()    {}
 
-func (*AlreadyExists) serviceCreateUserRes() {}
-func (*AlreadyExists) servicePatchUserRes()  {}
-func (*AlreadyExists) servicePutUserRes()    {}
-
-type AlreadyExistsCode float64
+type AlreadyExistsResponseMessage string
 
 const (
-	AlreadyExistsCode409 AlreadyExistsCode = 409
+	AlreadyExistsResponseMessageAlreadyExistsUsernameTaken AlreadyExistsResponseMessage = "already exists, username taken"
+	AlreadyExistsResponseMessageAlreadyExistsEmailTaken    AlreadyExistsResponseMessage = "already exists, email taken"
 )
 
-// AllValues returns all AlreadyExistsCode values.
-func (AlreadyExistsCode) AllValues() []AlreadyExistsCode {
-	return []AlreadyExistsCode{
-		AlreadyExistsCode409,
-	}
-}
-
-type AlreadyExistsMessage string
-
-const (
-	AlreadyExistsMessageAlreadyExists AlreadyExistsMessage = "already exists"
-)
-
-// AllValues returns all AlreadyExistsMessage values.
-func (AlreadyExistsMessage) AllValues() []AlreadyExistsMessage {
-	return []AlreadyExistsMessage{
-		AlreadyExistsMessageAlreadyExists,
+// AllValues returns all AlreadyExistsResponseMessage values.
+func (AlreadyExistsResponseMessage) AllValues() []AlreadyExistsResponseMessage {
+	return []AlreadyExistsResponseMessage{
+		AlreadyExistsResponseMessageAlreadyExistsUsernameTaken,
+		AlreadyExistsResponseMessageAlreadyExistsEmailTaken,
 	}
 }
 
 // MarshalText implements encoding.TextMarshaler.
-func (s AlreadyExistsMessage) MarshalText() ([]byte, error) {
+func (s AlreadyExistsResponseMessage) MarshalText() ([]byte, error) {
 	switch s {
-	case AlreadyExistsMessageAlreadyExists:
+	case AlreadyExistsResponseMessageAlreadyExistsUsernameTaken:
+		return []byte(s), nil
+	case AlreadyExistsResponseMessageAlreadyExistsEmailTaken:
 		return []byte(s), nil
 	default:
 		return nil, errors.Errorf("invalid value: %q", s)
@@ -85,10 +54,13 @@ func (s AlreadyExistsMessage) MarshalText() ([]byte, error) {
 }
 
 // UnmarshalText implements encoding.TextUnmarshaler.
-func (s *AlreadyExistsMessage) UnmarshalText(data []byte) error {
-	switch AlreadyExistsMessage(data) {
-	case AlreadyExistsMessageAlreadyExists:
-		*s = AlreadyExistsMessageAlreadyExists
+func (s *AlreadyExistsResponseMessage) UnmarshalText(data []byte) error {
+	switch AlreadyExistsResponseMessage(data) {
+	case AlreadyExistsResponseMessageAlreadyExistsUsernameTaken:
+		*s = AlreadyExistsResponseMessageAlreadyExistsUsernameTaken
+		return nil
+	case AlreadyExistsResponseMessageAlreadyExistsEmailTaken:
+		*s = AlreadyExistsResponseMessageAlreadyExistsEmailTaken
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
@@ -131,68 +103,44 @@ func (s *BasicAuth) SetRoles(val []string) {
 	s.Roles = val
 }
 
-// Ref: #/components/schemas/Forbidden
-type Forbidden struct {
-	Code    ForbiddenCode    `json:"code"`
-	Message ForbiddenMessage `json:"message"`
-}
-
-// GetCode returns the value of Code.
-func (s *Forbidden) GetCode() ForbiddenCode {
-	return s.Code
+// Ref: #/components/schemas/ForbiddenResponse
+type ForbiddenResponse struct {
+	Message ForbiddenResponseMessage `json:"message"`
 }
 
 // GetMessage returns the value of Message.
-func (s *Forbidden) GetMessage() ForbiddenMessage {
+func (s *ForbiddenResponse) GetMessage() ForbiddenResponseMessage {
 	return s.Message
 }
 
-// SetCode sets the value of Code.
-func (s *Forbidden) SetCode(val ForbiddenCode) {
-	s.Code = val
-}
-
 // SetMessage sets the value of Message.
-func (s *Forbidden) SetMessage(val ForbiddenMessage) {
+func (s *ForbiddenResponse) SetMessage(val ForbiddenResponseMessage) {
 	s.Message = val
 }
 
-func (*Forbidden) serviceCreateUserRes() {}
-func (*Forbidden) serviceDeleteUserRes() {}
-func (*Forbidden) serviceGetUserRes()    {}
-func (*Forbidden) servicePatchUserRes()  {}
-func (*Forbidden) servicePutUserRes()    {}
+func (*ForbiddenResponse) serviceCreateUserRes() {}
+func (*ForbiddenResponse) serviceDeleteUserRes() {}
+func (*ForbiddenResponse) serviceGetUserRes()    {}
+func (*ForbiddenResponse) servicePatchUserRes()  {}
+func (*ForbiddenResponse) servicePutUserRes()    {}
 
-type ForbiddenCode float64
-
-const (
-	ForbiddenCode403 ForbiddenCode = 403
-)
-
-// AllValues returns all ForbiddenCode values.
-func (ForbiddenCode) AllValues() []ForbiddenCode {
-	return []ForbiddenCode{
-		ForbiddenCode403,
-	}
-}
-
-type ForbiddenMessage string
+type ForbiddenResponseMessage string
 
 const (
-	ForbiddenMessageForbiddenAdminPermissionRequired ForbiddenMessage = "forbidden, admin permission required"
+	ForbiddenResponseMessageForbiddenAdminPermissionRequired ForbiddenResponseMessage = "forbidden, admin permission required"
 )
 
-// AllValues returns all ForbiddenMessage values.
-func (ForbiddenMessage) AllValues() []ForbiddenMessage {
-	return []ForbiddenMessage{
-		ForbiddenMessageForbiddenAdminPermissionRequired,
+// AllValues returns all ForbiddenResponseMessage values.
+func (ForbiddenResponseMessage) AllValues() []ForbiddenResponseMessage {
+	return []ForbiddenResponseMessage{
+		ForbiddenResponseMessageForbiddenAdminPermissionRequired,
 	}
 }
 
 // MarshalText implements encoding.TextMarshaler.
-func (s ForbiddenMessage) MarshalText() ([]byte, error) {
+func (s ForbiddenResponseMessage) MarshalText() ([]byte, error) {
 	switch s {
-	case ForbiddenMessageForbiddenAdminPermissionRequired:
+	case ForbiddenResponseMessageForbiddenAdminPermissionRequired:
 		return []byte(s), nil
 	default:
 		return nil, errors.Errorf("invalid value: %q", s)
@@ -200,10 +148,10 @@ func (s ForbiddenMessage) MarshalText() ([]byte, error) {
 }
 
 // UnmarshalText implements encoding.TextUnmarshaler.
-func (s *ForbiddenMessage) UnmarshalText(data []byte) error {
-	switch ForbiddenMessage(data) {
-	case ForbiddenMessageForbiddenAdminPermissionRequired:
-		*s = ForbiddenMessageForbiddenAdminPermissionRequired
+func (s *ForbiddenResponseMessage) UnmarshalText(data []byte) error {
+	switch ForbiddenResponseMessage(data) {
+	case ForbiddenResponseMessageForbiddenAdminPermissionRequired:
+		*s = ForbiddenResponseMessageForbiddenAdminPermissionRequired
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
@@ -213,69 +161,45 @@ func (s *ForbiddenMessage) UnmarshalText(data []byte) error {
 // HealthOK is response for Health operation.
 type HealthOK struct{}
 
-// Ref: #/components/schemas/InternalServerError
-type InternalServerError struct {
-	Code    InternalServerErrorCode    `json:"code"`
-	Message InternalServerErrorMessage `json:"message"`
-}
-
-// GetCode returns the value of Code.
-func (s *InternalServerError) GetCode() InternalServerErrorCode {
-	return s.Code
+// Ref: #/components/schemas/InternalErrorResponse
+type InternalErrorResponse struct {
+	Message InternalErrorResponseMessage `json:"message"`
 }
 
 // GetMessage returns the value of Message.
-func (s *InternalServerError) GetMessage() InternalServerErrorMessage {
+func (s *InternalErrorResponse) GetMessage() InternalErrorResponseMessage {
 	return s.Message
 }
 
-// SetCode sets the value of Code.
-func (s *InternalServerError) SetCode(val InternalServerErrorCode) {
-	s.Code = val
-}
-
 // SetMessage sets the value of Message.
-func (s *InternalServerError) SetMessage(val InternalServerErrorMessage) {
+func (s *InternalErrorResponse) SetMessage(val InternalErrorResponseMessage) {
 	s.Message = val
 }
 
-func (*InternalServerError) serviceCreateUserRes() {}
-func (*InternalServerError) serviceDeleteUserRes() {}
-func (*InternalServerError) serviceGetUserRes()    {}
-func (*InternalServerError) serviceListUsersRes()  {}
-func (*InternalServerError) servicePatchUserRes()  {}
-func (*InternalServerError) servicePutUserRes()    {}
+func (*InternalErrorResponse) serviceCreateUserRes() {}
+func (*InternalErrorResponse) serviceDeleteUserRes() {}
+func (*InternalErrorResponse) serviceGetUserRes()    {}
+func (*InternalErrorResponse) serviceListUsersRes()  {}
+func (*InternalErrorResponse) servicePatchUserRes()  {}
+func (*InternalErrorResponse) servicePutUserRes()    {}
 
-type InternalServerErrorCode float64
-
-const (
-	InternalServerErrorCode500 InternalServerErrorCode = 500
-)
-
-// AllValues returns all InternalServerErrorCode values.
-func (InternalServerErrorCode) AllValues() []InternalServerErrorCode {
-	return []InternalServerErrorCode{
-		InternalServerErrorCode500,
-	}
-}
-
-type InternalServerErrorMessage string
+type InternalErrorResponseMessage string
 
 const (
-	InternalServerErrorMessageInternalServerError InternalServerErrorMessage = "internal server error"
+	InternalErrorResponseMessageInternalServerError InternalErrorResponseMessage = "internal server error"
 )
 
-// AllValues returns all InternalServerErrorMessage values.
-func (InternalServerErrorMessage) AllValues() []InternalServerErrorMessage {
-	return []InternalServerErrorMessage{
-		InternalServerErrorMessageInternalServerError,
+// AllValues returns all InternalErrorResponseMessage values.
+func (InternalErrorResponseMessage) AllValues() []InternalErrorResponseMessage {
+	return []InternalErrorResponseMessage{
+		InternalErrorResponseMessageInternalServerError,
 	}
 }
 
 // MarshalText implements encoding.TextMarshaler.
-func (s InternalServerErrorMessage) MarshalText() ([]byte, error) {
+func (s InternalErrorResponseMessage) MarshalText() ([]byte, error) {
 	switch s {
-	case InternalServerErrorMessageInternalServerError:
+	case InternalErrorResponseMessageInternalServerError:
 		return []byte(s), nil
 	default:
 		return nil, errors.Errorf("invalid value: %q", s)
@@ -283,74 +207,50 @@ func (s InternalServerErrorMessage) MarshalText() ([]byte, error) {
 }
 
 // UnmarshalText implements encoding.TextUnmarshaler.
-func (s *InternalServerErrorMessage) UnmarshalText(data []byte) error {
-	switch InternalServerErrorMessage(data) {
-	case InternalServerErrorMessageInternalServerError:
-		*s = InternalServerErrorMessageInternalServerError
+func (s *InternalErrorResponseMessage) UnmarshalText(data []byte) error {
+	switch InternalErrorResponseMessage(data) {
+	case InternalErrorResponseMessageInternalServerError:
+		*s = InternalErrorResponseMessageInternalServerError
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
 	}
 }
 
-// Ref: #/components/schemas/NotFound
-type NotFound struct {
-	Code    NotFoundCode    `json:"code"`
-	Message NotFoundMessage `json:"message"`
-}
-
-// GetCode returns the value of Code.
-func (s *NotFound) GetCode() NotFoundCode {
-	return s.Code
+// Ref: #/components/schemas/NotFoundResponse
+type NotFoundResponse struct {
+	Message NotFoundResponseMessage `json:"message"`
 }
 
 // GetMessage returns the value of Message.
-func (s *NotFound) GetMessage() NotFoundMessage {
+func (s *NotFoundResponse) GetMessage() NotFoundResponseMessage {
 	return s.Message
 }
 
-// SetCode sets the value of Code.
-func (s *NotFound) SetCode(val NotFoundCode) {
-	s.Code = val
-}
-
 // SetMessage sets the value of Message.
-func (s *NotFound) SetMessage(val NotFoundMessage) {
+func (s *NotFoundResponse) SetMessage(val NotFoundResponseMessage) {
 	s.Message = val
 }
 
-func (*NotFound) serviceGetUserRes() {}
+func (*NotFoundResponse) serviceGetUserRes() {}
 
-type NotFoundCode float64
-
-const (
-	NotFoundCode404 NotFoundCode = 404
-)
-
-// AllValues returns all NotFoundCode values.
-func (NotFoundCode) AllValues() []NotFoundCode {
-	return []NotFoundCode{
-		NotFoundCode404,
-	}
-}
-
-type NotFoundMessage string
+type NotFoundResponseMessage string
 
 const (
-	NotFoundMessageNotFound NotFoundMessage = "not found"
+	NotFoundResponseMessageNotFound NotFoundResponseMessage = "not found"
 )
 
-// AllValues returns all NotFoundMessage values.
-func (NotFoundMessage) AllValues() []NotFoundMessage {
-	return []NotFoundMessage{
-		NotFoundMessageNotFound,
+// AllValues returns all NotFoundResponseMessage values.
+func (NotFoundResponseMessage) AllValues() []NotFoundResponseMessage {
+	return []NotFoundResponseMessage{
+		NotFoundResponseMessageNotFound,
 	}
 }
 
 // MarshalText implements encoding.TextMarshaler.
-func (s NotFoundMessage) MarshalText() ([]byte, error) {
+func (s NotFoundResponseMessage) MarshalText() ([]byte, error) {
 	switch s {
-	case NotFoundMessageNotFound:
+	case NotFoundResponseMessageNotFound:
 		return []byte(s), nil
 	default:
 		return nil, errors.Errorf("invalid value: %q", s)
@@ -358,10 +258,10 @@ func (s NotFoundMessage) MarshalText() ([]byte, error) {
 }
 
 // UnmarshalText implements encoding.TextUnmarshaler.
-func (s *NotFoundMessage) UnmarshalText(data []byte) error {
-	switch NotFoundMessage(data) {
-	case NotFoundMessageNotFound:
-		*s = NotFoundMessageNotFound
+func (s *NotFoundResponseMessage) UnmarshalText(data []byte) error {
+	switch NotFoundResponseMessage(data) {
+	case NotFoundResponseMessageNotFound:
+		*s = NotFoundResponseMessageNotFound
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
@@ -527,6 +427,12 @@ func (*ServicePutUserOK) servicePutUserRes() {}
 
 type UUID uuid.UUID
 
+// User model all fields isn't required
+// - `id`: the uuid
+// - `username`: the user's name
+// - `password`: the user's password, returned like a base64 string
+// - `email`: the user's email
+// - `is_admin`: define user permissions.
 // Ref: #/components/schemas/User
 type User struct {
 	ID       OptUUID   `json:"id" db:"id"`
@@ -589,79 +495,44 @@ func (s *User) SetIsAdmin(val OptBool) {
 func (*User) serviceCreateUserRes() {}
 func (*User) serviceGetUserRes()    {}
 
-// Ref: #/components/schemas/ValidationError
-type ValidationError struct {
-	Code    ValidationErrorCode    `json:"code"`
-	Message ValidationErrorMessage `json:"message"`
-	Details []string               `json:"details"`
-}
-
-// GetCode returns the value of Code.
-func (s *ValidationError) GetCode() ValidationErrorCode {
-	return s.Code
+// Ref: #/components/schemas/ValidationErrorResponse
+type ValidationErrorResponse struct {
+	Message ValidationErrorResponseMessage `json:"message"`
 }
 
 // GetMessage returns the value of Message.
-func (s *ValidationError) GetMessage() ValidationErrorMessage {
+func (s *ValidationErrorResponse) GetMessage() ValidationErrorResponseMessage {
 	return s.Message
 }
 
-// GetDetails returns the value of Details.
-func (s *ValidationError) GetDetails() []string {
-	return s.Details
-}
-
-// SetCode sets the value of Code.
-func (s *ValidationError) SetCode(val ValidationErrorCode) {
-	s.Code = val
-}
-
 // SetMessage sets the value of Message.
-func (s *ValidationError) SetMessage(val ValidationErrorMessage) {
+func (s *ValidationErrorResponse) SetMessage(val ValidationErrorResponseMessage) {
 	s.Message = val
 }
 
-// SetDetails sets the value of Details.
-func (s *ValidationError) SetDetails(val []string) {
-	s.Details = val
-}
+func (*ValidationErrorResponse) serviceCreateUserRes() {}
+func (*ValidationErrorResponse) serviceDeleteUserRes() {}
+func (*ValidationErrorResponse) serviceGetUserRes()    {}
+func (*ValidationErrorResponse) servicePatchUserRes()  {}
+func (*ValidationErrorResponse) servicePutUserRes()    {}
 
-func (*ValidationError) serviceCreateUserRes() {}
-func (*ValidationError) serviceDeleteUserRes() {}
-func (*ValidationError) serviceGetUserRes()    {}
-func (*ValidationError) servicePatchUserRes()  {}
-func (*ValidationError) servicePutUserRes()    {}
-
-type ValidationErrorCode float64
+type ValidationErrorResponseMessage string
 
 const (
-	ValidationErrorCode400 ValidationErrorCode = 400
+	ValidationErrorResponseMessageBadParams ValidationErrorResponseMessage = "bad params"
 )
 
-// AllValues returns all ValidationErrorCode values.
-func (ValidationErrorCode) AllValues() []ValidationErrorCode {
-	return []ValidationErrorCode{
-		ValidationErrorCode400,
-	}
-}
-
-type ValidationErrorMessage string
-
-const (
-	ValidationErrorMessageBadParams ValidationErrorMessage = "bad params"
-)
-
-// AllValues returns all ValidationErrorMessage values.
-func (ValidationErrorMessage) AllValues() []ValidationErrorMessage {
-	return []ValidationErrorMessage{
-		ValidationErrorMessageBadParams,
+// AllValues returns all ValidationErrorResponseMessage values.
+func (ValidationErrorResponseMessage) AllValues() []ValidationErrorResponseMessage {
+	return []ValidationErrorResponseMessage{
+		ValidationErrorResponseMessageBadParams,
 	}
 }
 
 // MarshalText implements encoding.TextMarshaler.
-func (s ValidationErrorMessage) MarshalText() ([]byte, error) {
+func (s ValidationErrorResponseMessage) MarshalText() ([]byte, error) {
 	switch s {
-	case ValidationErrorMessageBadParams:
+	case ValidationErrorResponseMessageBadParams:
 		return []byte(s), nil
 	default:
 		return nil, errors.Errorf("invalid value: %q", s)
@@ -669,10 +540,10 @@ func (s ValidationErrorMessage) MarshalText() ([]byte, error) {
 }
 
 // UnmarshalText implements encoding.TextUnmarshaler.
-func (s *ValidationErrorMessage) UnmarshalText(data []byte) error {
-	switch ValidationErrorMessage(data) {
-	case ValidationErrorMessageBadParams:
-		*s = ValidationErrorMessageBadParams
+func (s *ValidationErrorResponseMessage) UnmarshalText(data []byte) error {
+	switch ValidationErrorResponseMessage(data) {
+	case ValidationErrorResponseMessageBadParams:
+		*s = ValidationErrorResponseMessageBadParams
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
