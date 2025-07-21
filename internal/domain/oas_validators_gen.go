@@ -146,6 +146,21 @@ func (s ServiceListUsersOKApplicationJSON) Validate() error {
 	return nil
 }
 
+func (s ValidationErrorMessage) Validate() error {
+	switch s {
+	case "bad params":
+		return nil
+	case "invalid username":
+		return nil
+	case "invalid password":
+		return nil
+	case "invalid email":
+		return nil
+	default:
+		return errors.Errorf("invalid value: %v", s)
+	}
+}
+
 func (s *ValidationErrorResponse) Validate() error {
 	if s == nil {
 		return validate.ErrNilPointer
@@ -167,13 +182,4 @@ func (s *ValidationErrorResponse) Validate() error {
 		return &validate.Error{Fields: failures}
 	}
 	return nil
-}
-
-func (s ValidationErrorResponseMessage) Validate() error {
-	switch s {
-	case "bad params":
-		return nil
-	default:
-		return errors.Errorf("invalid value: %v", s)
-	}
 }

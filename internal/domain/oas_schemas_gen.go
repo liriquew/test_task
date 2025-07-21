@@ -495,18 +495,74 @@ func (s *User) SetIsAdmin(val OptBool) {
 func (*User) serviceCreateUserRes() {}
 func (*User) serviceGetUserRes()    {}
 
+// Ref: #/components/schemas/ValidationErrorMessage
+type ValidationErrorMessage string
+
+const (
+	ValidationErrorMessageBadParams       ValidationErrorMessage = "bad params"
+	ValidationErrorMessageInvalidUsername ValidationErrorMessage = "invalid username"
+	ValidationErrorMessageInvalidPassword ValidationErrorMessage = "invalid password"
+	ValidationErrorMessageInvalidEmail    ValidationErrorMessage = "invalid email"
+)
+
+// AllValues returns all ValidationErrorMessage values.
+func (ValidationErrorMessage) AllValues() []ValidationErrorMessage {
+	return []ValidationErrorMessage{
+		ValidationErrorMessageBadParams,
+		ValidationErrorMessageInvalidUsername,
+		ValidationErrorMessageInvalidPassword,
+		ValidationErrorMessageInvalidEmail,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s ValidationErrorMessage) MarshalText() ([]byte, error) {
+	switch s {
+	case ValidationErrorMessageBadParams:
+		return []byte(s), nil
+	case ValidationErrorMessageInvalidUsername:
+		return []byte(s), nil
+	case ValidationErrorMessageInvalidPassword:
+		return []byte(s), nil
+	case ValidationErrorMessageInvalidEmail:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *ValidationErrorMessage) UnmarshalText(data []byte) error {
+	switch ValidationErrorMessage(data) {
+	case ValidationErrorMessageBadParams:
+		*s = ValidationErrorMessageBadParams
+		return nil
+	case ValidationErrorMessageInvalidUsername:
+		*s = ValidationErrorMessageInvalidUsername
+		return nil
+	case ValidationErrorMessageInvalidPassword:
+		*s = ValidationErrorMessageInvalidPassword
+		return nil
+	case ValidationErrorMessageInvalidEmail:
+		*s = ValidationErrorMessageInvalidEmail
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
 // Ref: #/components/schemas/ValidationErrorResponse
 type ValidationErrorResponse struct {
-	Message ValidationErrorResponseMessage `json:"message"`
+	Message ValidationErrorMessage `json:"message"`
 }
 
 // GetMessage returns the value of Message.
-func (s *ValidationErrorResponse) GetMessage() ValidationErrorResponseMessage {
+func (s *ValidationErrorResponse) GetMessage() ValidationErrorMessage {
 	return s.Message
 }
 
 // SetMessage sets the value of Message.
-func (s *ValidationErrorResponse) SetMessage(val ValidationErrorResponseMessage) {
+func (s *ValidationErrorResponse) SetMessage(val ValidationErrorMessage) {
 	s.Message = val
 }
 
@@ -515,37 +571,3 @@ func (*ValidationErrorResponse) serviceDeleteUserRes() {}
 func (*ValidationErrorResponse) serviceGetUserRes()    {}
 func (*ValidationErrorResponse) servicePatchUserRes()  {}
 func (*ValidationErrorResponse) servicePutUserRes()    {}
-
-type ValidationErrorResponseMessage string
-
-const (
-	ValidationErrorResponseMessageBadParams ValidationErrorResponseMessage = "bad params"
-)
-
-// AllValues returns all ValidationErrorResponseMessage values.
-func (ValidationErrorResponseMessage) AllValues() []ValidationErrorResponseMessage {
-	return []ValidationErrorResponseMessage{
-		ValidationErrorResponseMessageBadParams,
-	}
-}
-
-// MarshalText implements encoding.TextMarshaler.
-func (s ValidationErrorResponseMessage) MarshalText() ([]byte, error) {
-	switch s {
-	case ValidationErrorResponseMessageBadParams:
-		return []byte(s), nil
-	default:
-		return nil, errors.Errorf("invalid value: %q", s)
-	}
-}
-
-// UnmarshalText implements encoding.TextUnmarshaler.
-func (s *ValidationErrorResponseMessage) UnmarshalText(data []byte) error {
-	switch ValidationErrorResponseMessage(data) {
-	case ValidationErrorResponseMessageBadParams:
-		*s = ValidationErrorResponseMessageBadParams
-		return nil
-	default:
-		return errors.Errorf("invalid value: %q", data)
-	}
-}

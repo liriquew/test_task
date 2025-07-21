@@ -5,7 +5,6 @@ go 1.24.4
 require (
 	github.com/brianvoe/gofakeit/v6 v6.28.0
 	github.com/fatih/color v1.18.0
-	github.com/go-chi/chi/v5 v5.2.1
 	github.com/go-faster/errors v0.7.1
 	github.com/go-faster/jx v1.1.0
 	github.com/google/uuid v1.6.0
@@ -17,6 +16,7 @@ require (
 	go.opentelemetry.io/otel v1.37.0
 	go.opentelemetry.io/otel/metric v1.37.0
 	go.opentelemetry.io/otel/trace v1.37.0
+	go.uber.org/mock v0.5.2
 	golang.org/x/crypto v0.40.0
 )
 

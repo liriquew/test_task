@@ -33,7 +33,7 @@ scalar uuid extends string;
 model User {
   @extension("x-oapi-codegen-extra-tags", #{db: "id"})
   id?: uuid;
-  
+
   @extension("x-oapi-codegen-extra-tags", #{db: "username"})
   username?: string;
 
@@ -61,7 +61,7 @@ model UserCreatedResponse {
 model UserListResponse {
   ...OkResponse;
   ...Body<User[]>;
-} 
+}
 
 
 model ValidationErrorResponse {
@@ -95,16 +95,16 @@ namespace Service {
   @doc("Returns a list of all users")
   @get
   @useAuth(BasicAuth)
-  op listUsers(): 
-    | UserListResponse 
+  op listUsers():
+    | UserListResponse
     | InternalErrorResponse;
 
   @tag("Users")
   @doc("Returns a User if user with provided userId exists, 404 otherwise")
   @get
   @useAuth(BasicAuth)
-  op getUser(@path userId: uuid): 
-    | UserResponse 
+  op getUser(@path userId: uuid):
+    | UserResponse
     | ValidationErrorResponse
     | ForbiddenResponse
     | NotFoundResponse
@@ -112,7 +112,7 @@ namespace Service {
 
   @tag("Users")
   @doc("""
-    Create a user 
+    Create a user
     - all fields must be provided, 400 otherwise
     - admin permission required
   """)
@@ -121,15 +121,15 @@ namespace Service {
   op createUser(@body user: User):
     | UserCreatedResponse
     | ValidationErrorResponse
-    | ForbiddenResponse 
-    | AlreadyExistsResponse 
+    | ForbiddenResponse
+    | AlreadyExistsResponse
     | InternalErrorResponse;
 
   @tag("Users")
   @doc("""
     Patch User
     - one of the fields must be provided, except id
-    - admin permission required 
+    - admin permission required
   """)
   @patch
   @useAuth(BasicAuth)
@@ -142,27 +142,27 @@ namespace Service {
 
   @tag("Users")
   @doc("""
-    Put a new User params 
+    Put a new User params
     - all fields must be provided, except id
     - admin permission required
   """)
   @put
   @useAuth(BasicAuth)
-  op putUser(@path userId: uuid, @body user: User): 
+  op putUser(@path userId: uuid, @body user: User):
     | OkResponse
     | ValidationErrorResponse
     | ForbiddenResponse
     | AlreadyExistsResponse
     | InternalErrorResponse;
-    
+
   @tag("Users")
   @doc("""
     Delete User
-    - admin permission required 
+    - admin permission required
   """)
   @delete
   @useAuth(BasicAuth)
-  op deleteUser(@path userId: uuid): 
+  op deleteUser(@path userId: uuid):
     | OkResponse
     | ValidationErrorResponse
     | ForbiddenResponse
@@ -176,10 +176,22 @@ model InternalServerError {
   message: "internal server error";
 }
 
+union ValidationErrorMessage {
+  @doc("just bad query params")
+  badParams: "bad params";
+  @doc("username length musth be greater than 8 and username must consists only eng characters")
+  badUsername: "invalid username";
+  @doc("password length must be greater than 8 and consists of lower, upper letters and digits")
+  badPassword: "invalid password";
+  @doc("email must be a valid email")
+  badEmail: "invalid email";
+}
+
 @error
 model ValidationError {
   @statusCode code: 400;
-  message: "bad params";
+  @TypeSpec.OpenAPI.oneOf
+  message: ValidationErrorMessage;
 }
 
 @error
@@ -203,7 +215,7 @@ model ForbiddenError {
 /* example */
 const AdminUser: User = #{
   id: "ac63a680-bddb-4102-b7a3-9fdc6ee53df2",
-  username: "admin", 
+  username: "admin",
   password: "admin",
   email: "admin@admin.ru",
   is_admin: true,

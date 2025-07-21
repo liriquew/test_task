@@ -868,6 +868,50 @@ func (s *User) UnmarshalJSON(data []byte) error {
 	return s.Decode(d)
 }
 
+// Encode encodes ValidationErrorMessage as json.
+func (s ValidationErrorMessage) Encode(e *jx.Encoder) {
+	e.Str(string(s))
+}
+
+// Decode decodes ValidationErrorMessage from json.
+func (s *ValidationErrorMessage) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode ValidationErrorMessage to nil")
+	}
+	v, err := d.StrBytes()
+	if err != nil {
+		return err
+	}
+	// Try to use constant string.
+	switch ValidationErrorMessage(v) {
+	case ValidationErrorMessageBadParams:
+		*s = ValidationErrorMessageBadParams
+	case ValidationErrorMessageInvalidUsername:
+		*s = ValidationErrorMessageInvalidUsername
+	case ValidationErrorMessageInvalidPassword:
+		*s = ValidationErrorMessageInvalidPassword
+	case ValidationErrorMessageInvalidEmail:
+		*s = ValidationErrorMessageInvalidEmail
+	default:
+		*s = ValidationErrorMessage(v)
+	}
+
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s ValidationErrorMessage) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *ValidationErrorMessage) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
 // Encode implements json.Marshaler.
 func (s *ValidationErrorResponse) Encode(e *jx.Encoder) {
 	e.ObjStart()
@@ -958,44 +1002,6 @@ func (s *ValidationErrorResponse) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements stdjson.Unmarshaler.
 func (s *ValidationErrorResponse) UnmarshalJSON(data []byte) error {
-	d := jx.DecodeBytes(data)
-	return s.Decode(d)
-}
-
-// Encode encodes ValidationErrorResponseMessage as json.
-func (s ValidationErrorResponseMessage) Encode(e *jx.Encoder) {
-	e.Str(string(s))
-}
-
-// Decode decodes ValidationErrorResponseMessage from json.
-func (s *ValidationErrorResponseMessage) Decode(d *jx.Decoder) error {
-	if s == nil {
-		return errors.New("invalid: unable to decode ValidationErrorResponseMessage to nil")
-	}
-	v, err := d.StrBytes()
-	if err != nil {
-		return err
-	}
-	// Try to use constant string.
-	switch ValidationErrorResponseMessage(v) {
-	case ValidationErrorResponseMessageBadParams:
-		*s = ValidationErrorResponseMessageBadParams
-	default:
-		*s = ValidationErrorResponseMessage(v)
-	}
-
-	return nil
-}
-
-// MarshalJSON implements stdjson.Marshaler.
-func (s ValidationErrorResponseMessage) MarshalJSON() ([]byte, error) {
-	e := jx.Encoder{}
-	s.Encode(&e)
-	return e.Bytes(), nil
-}
-
-// UnmarshalJSON implements stdjson.Unmarshaler.
-func (s *ValidationErrorResponseMessage) UnmarshalJSON(data []byte) error {
 	d := jx.DecodeBytes(data)
 	return s.Decode(d)
 }

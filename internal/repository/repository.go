@@ -115,9 +115,9 @@ func (s *Repository) CreateUser(ctx context.Context, user *domain.User) (*domain
 		return nil, err
 	}
 
-	user.ID = domain.NewOptUUID(domain.UUID(id))
+	res := domain.UUID(id)
 
-	return &user.ID.Value, nil
+	return &res, nil
 }
 
 func (s *Repository) GetUserById(ctx context.Context, id domain.UUID) (*domain.User, error) {

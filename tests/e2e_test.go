@@ -42,8 +42,8 @@ func Copy(u *domain.User) *domain.User {
 
 func GetRandomUser() *domain.User {
 	return &domain.User{
-		Username: domain.NewOptString(gofakeit.Username()),
-		Password: domain.NewOptString(gofakeit.AppName()),
+		Username: domain.NewOptString(gofakeit.Username() + gofakeit.AchAccount()),
+		Password: domain.NewOptString(gofakeit.Password(true, true, true, false, false, 12) + "1" + "a" + "A"),
 		Email:    domain.NewOptString(gofakeit.Email()),
 		IsAdmin: domain.OptBool{
 			Value: false,
@@ -73,20 +73,6 @@ func GetAuthHeader(user *domain.User) map[string]string {
 		"Authorization": "Basic " + value,
 		"Content-Type":  "application/json",
 	}
-}
-
-func CreateUser(t *testing.T, user *domain.User) uuid.UUID {
-	const url = "users/"
-	var id Id
-	DoRequest(t, "POST", url, user, GetAuthHeader(GetDefaultAdmin()), 201, &id)
-	return id.Id
-}
-
-func GetUser(t *testing.T, id uuid.UUID) domain.User {
-	url := fmt.Sprintf("users/%s", id.String())
-	user := domain.User{}
-	DoRequest(t, "GET", url, nil, GetAuthHeader(GetDefaultAdmin()), 200, &user)
-	return user
 }
 
 func DoRequest(t *testing.T, method, url string, body any, header map[string]string, code int, respBody any) {
@@ -125,6 +111,20 @@ func DoRequest(t *testing.T, method, url string, body any, header map[string]str
 		err := json.NewDecoder(resp.Body).Decode(respBody)
 		require.NoError(t, err)
 	}
+}
+
+func CreateUser(t *testing.T, user *domain.User) uuid.UUID {
+	const url = "users/"
+	var id Id
+	DoRequest(t, "POST", url, user, GetAuthHeader(GetDefaultAdmin()), 201, &id)
+	return id.Id
+}
+
+func GetUser(t *testing.T, id uuid.UUID) domain.User {
+	url := fmt.Sprintf("users/%s", id.String())
+	user := domain.User{}
+	DoRequest(t, "GET", url, nil, GetAuthHeader(GetDefaultAdmin()), 200, &user)
+	return user
 }
 
 func TestCreateUser(t *testing.T) {
@@ -217,7 +217,7 @@ func TestPatchUser(t *testing.T) {
 		user.ID.SetTo(domain.UUID(id))
 
 		url := fmt.Sprintf("users/%s", id.String())
-		user.Username.SetTo(gofakeit.Username())
+		user.Username.SetTo(gofakeit.Username() + gofakeit.AchAccount())
 		user.Email.SetTo(gofakeit.Email())
 		DoRequest(t, "PATCH", url, &domain.User{
 			Username: user.Username,
@@ -293,7 +293,9 @@ func TestListUsers(t *testing.T) {
 
 	for _, user := range resp {
 		id := uuid.UUID(user.ID.Value)
-		usersSet[id]++
+		if _, ok := usersSet[id]; ok {
+			usersSet[id]++
+		}
 	}
 
 	for _, v := range usersSet {

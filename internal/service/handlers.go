@@ -22,6 +22,7 @@ func (s *Service) ServiceListUsers(ctx context.Context) (
 ) {
 	users, err := s.repo.ListUsers(ctx)
 	if err != nil {
+		s.log.Warn("error while getting users in ListUsers", sl.Err(err))
 		return &domain.InternalErrorResponse{}, nil
 	}
 
@@ -54,6 +55,11 @@ func (s *Service) ServiceCreateUser(
 		}, nil
 	}
 
+	// validate user
+	if errResp := ValidateUser(user); errResp != nil {
+		return errResp, nil
+	}
+
 	passwordHash, err := bcrypt.GenerateFromPassword([]byte(user.Password.Value), bcrypt.DefaultCost)
 	if err != nil {
 		s.log.Warn("error while generating password hash", sl.Err(err))
@@ -65,7 +71,7 @@ func (s *Service) ServiceCreateUser(
 	}
 	user.Password.Value = base64.StdEncoding.EncodeToString(passwordHash)
 
-	_, err = s.repo.CreateUser(ctx, user)
+	uuid, err := s.repo.CreateUser(ctx, user)
 	if err != nil {
 		s.log.Warn("error while creating user", sl.Err(err))
 		if errors.Is(err, repository.ErrUsernameExists) {
@@ -85,6 +91,8 @@ func (s *Service) ServiceCreateUser(
 			),
 		}, nil
 	}
+
+	user.ID.SetTo(*uuid)
 
 	return user, nil
 }
@@ -119,14 +127,6 @@ func (s *Service) ServiceDeleteUser(
 	err := s.repo.DeleteUser(ctx, params.UserId)
 	if err != nil {
 		s.log.Warn("error while deleting user", sl.Err(err))
-		// TODO: check repo layer error
-
-		// if errors.Is(err, repository.ErrNotFound) {
-		// 	return domain.NotFoundError{
-		// 		Message: domain.NotFoundMessage,
-		// 	}, nil
-		// }
-
 		return &domain.InternalErrorResponse{
 			Message: domain.InternalErrorResponseMessage(
 				fmt.Sprintf("internal error: %s", err),
@@ -144,6 +144,11 @@ func (s *Service) ServicePatchUser(
 ) (domain.ServicePatchUserRes, error) {
 	user.ID.Value = params.UserId
 
+	// validate user
+	if errResp := ValidateUser(user); errResp != nil {
+		return errResp, nil
+	}
+
 	if err := s.repo.UpdateUser(ctx, user); err != nil {
 		s.log.Warn("error while patching user PatchUser", sl.Err(err))
 		if errors.Is(err, repository.ErrUsernameExists) {
@@ -154,6 +159,11 @@ func (s *Service) ServicePatchUser(
 		if errors.Is(err, repository.ErrEmailExists) {
 			return &domain.AlreadyExistsResponse{
 				Message: "email already exists",
+			}, nil
+		}
+		if errors.Is(err, repository.ErrEmptyUpdate) {
+			return &domain.ValidationErrorResponse{
+				Message: "nothing to update",
 			}, nil
 		}
 
@@ -186,6 +196,11 @@ func (s *Service) ServicePutUser(
 		return &domain.ValidationErrorResponse{
 			Message: "empty username",
 		}, nil
+	}
+
+	// validate user
+	if errResp := ValidateUser(user); errResp != nil {
+		return errResp, nil
 	}
 
 	if err := s.repo.UpdateUser(ctx, user); err != nil {

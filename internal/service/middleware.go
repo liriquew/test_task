@@ -52,7 +52,6 @@ func (m *UserServiceMiddleware) CheckAdminPermission() middleware.Middleware {
 		next middleware.Next,
 	) (middleware.Response, error) {
 		isAdmin := req.Context.Value(IsAdmin{}).(bool)
-		m.log.Info("CheckAdminPermission", slog.Bool("isadm", isAdmin), slog.String("operationName", req.OperationName))
 		if isAdmin || req.OperationName == "ServiceListUsers" {
 			return next(req)
 		}

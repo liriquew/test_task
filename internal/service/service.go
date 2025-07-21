@@ -7,6 +7,7 @@ import (
 	domain "github.com/liriquew/test_task/internal/domain"
 )
 
+//go:generate mockgen -source=service.go -destination=mocks/repository.go -package=mocks
 type Repository interface {
 	ListUsers(context.Context) ([]domain.User, error)
 

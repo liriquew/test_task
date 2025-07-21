@@ -20,9 +20,7 @@ type App struct {
 
 func New(log *slog.Logger, cfg config.AppConfig) App {
 	storage := repository.New(cfg.Storage)
-
 	srvs := service.New(log, storage)
-
 	mdlwr := service.NewMiddleware(log, storage)
 
 	server, err := domain.NewServer(srvs, mdlwr, []domain.ServerOption{
