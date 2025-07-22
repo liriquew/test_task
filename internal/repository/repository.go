@@ -67,10 +67,9 @@ func UUID(id domain.UUID) string {
 func (s *Repository) ListUsers(ctx context.Context, offset int64) ([]domain.User, error) {
 	var users []DBUser
 
-	fmt.Println("offset", offset)
-
 	query := `
 		SELECT * FROM users
+		ORDER BY id
 		OFFSET $1
 		LIMIT 10
 	`
@@ -221,6 +220,10 @@ func (s *Repository) GetUserByUsername(ctx context.Context, username string) (*d
 func (s *Repository) buildUpdate(user *domain.User) (queryParams string, args []any, err error) {
 	sb := strings.Builder{}
 
+	if user.Password.IsSet() {
+		args = append(args, user.Password.Value)
+		sb.WriteString(fmt.Sprintf("password=$%d, ", len(args)))
+	}
 	if user.Username.IsSet() {
 		args = append(args, user.Username.Value)
 		sb.WriteString(fmt.Sprintf("username=$%d, ", len(args)))

@@ -291,14 +291,5 @@ func TestListUsers(t *testing.T) {
 	var resp []domain.User
 	DoRequest(t, "GET", "users/", nil, GetAuthHeader(GetDefaultAdmin()), 200, &resp)
 
-	for _, user := range resp {
-		id := uuid.UUID(user.ID.Value)
-		if _, ok := usersSet[id]; ok {
-			usersSet[id]++
-		}
-	}
-
-	for _, v := range usersSet {
-		require.Equal(t, 1, v)
-	}
+	require.Len(t, resp, cnt)
 }

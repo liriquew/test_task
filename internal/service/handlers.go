@@ -2,14 +2,12 @@ package service
 
 import (
 	"context"
-	"encoding/base64"
 	"errors"
 	"fmt"
 
 	domain "github.com/liriquew/test_task/internal/domain"
 	"github.com/liriquew/test_task/internal/repository"
 	"github.com/liriquew/test_task/pkg/logger/sl"
-	"golang.org/x/crypto/bcrypt"
 )
 
 func (s *Service) Health(ctx context.Context) error {
@@ -63,16 +61,11 @@ func (s *Service) ServiceCreateUser(
 		return errResp, nil
 	}
 
-	passwordHash, err := bcrypt.GenerateFromPassword([]byte(user.Password.Value), bcrypt.DefaultCost)
-	if err != nil {
-		s.log.Warn("error while generating password hash", sl.Err(err))
-		return &domain.InternalErrorResponse{
-			Message: domain.InternalErrorResponseMessage(
-				fmt.Sprintf("error while generating password hash error: %s", err),
-			),
-		}, nil
+	hash, internalErr := hashPassword(user.Password.Value)
+	if internalErr != nil {
+		return internalErr, nil
 	}
-	user.Password.Value = base64.StdEncoding.EncodeToString(passwordHash)
+	user.Password.SetTo(hash)
 
 	uuid, err := s.repo.CreateUser(ctx, user)
 	if err != nil {
@@ -152,6 +145,12 @@ func (s *Service) ServicePatchUser(
 		return errResp, nil
 	}
 
+	hash, internalErr := hashPassword(user.Password.Value)
+	if internalErr != nil {
+		return internalErr, nil
+	}
+	user.Password.Value = hash
+
 	if err := s.repo.UpdateUser(ctx, user); err != nil {
 		s.log.Warn("error while patching user PatchUser", sl.Err(err))
 		if errors.Is(err, repository.ErrUsernameExists) {
@@ -192,12 +191,12 @@ func (s *Service) ServicePutUser(
 	}
 	if user.Password.Value == "" {
 		return &domain.ValidationErrorResponse{
-			Message: "empty username",
+			Message: "empty password",
 		}, nil
 	}
 	if user.Email.Value == "" {
 		return &domain.ValidationErrorResponse{
-			Message: "empty username",
+			Message: "empty email",
 		}, nil
 	}
 
@@ -205,6 +204,14 @@ func (s *Service) ServicePutUser(
 	if errResp := ValidateUser(user); errResp != nil {
 		return errResp, nil
 	}
+
+	hash, internalErr := hashPassword(user.Password.Value)
+	if internalErr != nil {
+		return internalErr, nil
+	}
+	user.Password.Value = hash
+
+	user.ID.SetTo(params.UserId)
 
 	if err := s.repo.UpdateUser(ctx, user); err != nil {
 		s.log.Warn("error while updating user in PutUser", sl.Err(err))

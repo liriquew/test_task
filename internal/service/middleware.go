@@ -2,10 +2,12 @@ package service
 
 import (
 	"context"
+	"encoding/base64"
 	"errors"
 	"log/slog"
 
 	"github.com/ogen-go/ogen/middleware"
+	"golang.org/x/crypto/bcrypt"
 
 	api "github.com/liriquew/test_task/internal/domain"
 	domain "github.com/liriquew/test_task/internal/domain"
@@ -37,8 +39,17 @@ func (m *UserServiceMiddleware) HandleBasicAuth(
 		return nil, err
 	}
 
-	ctx = context.WithValue(ctx, IsAdmin{}, user.IsAdmin.Value)
+	passwordHash, err := base64.StdEncoding.DecodeString(user.Password.Value)
+	if err != nil {
+		m.log.Warn("error while decoding password hash", sl.Err(err))
+		return nil, err
+	}
 
+	if err := bcrypt.CompareHashAndPassword(passwordHash, []byte(t.Password)); err != nil {
+		return ctx, ErrUnauthorized
+	}
+
+	ctx = context.WithValue(ctx, IsAdmin{}, user.IsAdmin.Value)
 	return ctx, nil
 }
 
