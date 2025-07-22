@@ -85,6 +85,7 @@ model InternalErrorResponse {
 }
 
 /* handlers */
+@useAuth(BasicAuth)
 @route("/health")
 @get
 op health(): OkResponse;

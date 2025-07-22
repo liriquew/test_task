@@ -1,0 +1,417 @@
+openapi: 3.1.0
+info:
+  title: user_service
+  description: |-
+    Simple User service. Basic auth is used for authorization.
+    - all /users/{userId} require admin permissions.
+    - endpoint GET /users/ can be used by all users
+  version: 0.0.0
+tags:
+  - name: Users
+paths:
+  /health:
+    get:
+      operationId: health
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+      security:
+        - BasicAuth: []
+  /users/:
+    get:
+      operationId: Service_listUsers
+      description: Returns a list of all users
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalErrorResponse'
+      tags:
+        - Users
+      security:
+        - BasicAuth: []
+    post:
+      operationId: Service_createUser
+      description: |2-
+          Create a user
+          - all fields must be provided, 400 otherwise
+          - admin permission required
+      parameters: []
+      responses:
+        '201':
+          description: The request has succeeded and a new resource has been created as a result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: The server could not understand the request due to invalid syntax.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '403':
+          description: Access is forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenResponse'
+        '409':
+          description: The request conflicts with the current state of the server.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlreadyExistsResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalErrorResponse'
+      tags:
+        - Users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      security:
+        - BasicAuth: []
+  /users/{userId}:
+    get:
+      operationId: Service_getUser
+      description: Returns a User if user with provided userId exists, 404 otherwise
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/uuid'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: The server could not understand the request due to invalid syntax.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '403':
+          description: Access is forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenResponse'
+        '404':
+          description: The server cannot find the requested resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalErrorResponse'
+      tags:
+        - Users
+      security:
+        - BasicAuth: []
+    patch:
+      operationId: Service_patchUser
+      description: |2-
+          Patch User
+          - one of the fields must be provided, except id
+          - admin permission required
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/uuid'
+      responses:
+        '200':
+          description: The request has succeeded.
+        '400':
+          description: The server could not understand the request due to invalid syntax.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '403':
+          description: Access is forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenResponse'
+        '409':
+          description: The request conflicts with the current state of the server.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlreadyExistsResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalErrorResponse'
+      tags:
+        - Users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      security:
+        - BasicAuth: []
+    put:
+      operationId: Service_putUser
+      description: |2-
+          Put a new User params
+          - all fields must be provided, except id
+          - admin permission required
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/uuid'
+      responses:
+        '200':
+          description: The request has succeeded.
+        '400':
+          description: The server could not understand the request due to invalid syntax.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '403':
+          description: Access is forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenResponse'
+        '409':
+          description: The request conflicts with the current state of the server.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlreadyExistsResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalErrorResponse'
+      tags:
+        - Users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      security:
+        - BasicAuth: []
+    delete:
+      operationId: Service_deleteUser
+      description: |2-
+          Delete User
+          - admin permission required
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/uuid'
+      responses:
+        '200':
+          description: The request has succeeded.
+        '400':
+          description: The server could not understand the request due to invalid syntax.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '403':
+          description: Access is forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalErrorResponse'
+      tags:
+        - Users
+      security:
+        - BasicAuth: []
+components:
+  schemas:
+    AlreadyExistsError:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+          enum:
+            - already exists, username taken
+            - already exists, email taken
+    AlreadyExistsResponse:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+          enum:
+            - already exists, username taken
+            - already exists, email taken
+    ForbiddenError:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+          enum:
+            - forbidden, admin permission required
+    ForbiddenResponse:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+          enum:
+            - forbidden, admin permission required
+    InternalErrorResponse:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+          enum:
+            - internal server error
+    InternalServerError:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+          enum:
+            - internal server error
+    NotFoundError:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+          enum:
+            - not found
+    NotFoundResponse:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+          enum:
+            - not found
+    User:
+      type: object
+      properties:
+        id:
+          allOf:
+            - $ref: '#/components/schemas/uuid'
+          x-oapi-codegen-extra-tags:
+            db: id
+        username:
+          type: string
+          x-oapi-codegen-extra-tags:
+            db: username
+        password:
+          type: string
+          x-oapi-codegen-extra-tags:
+            db: password
+        email:
+          type: string
+          x-oapi-codegen-extra-tags:
+            db: email
+        is_admin:
+          type: boolean
+          x-oapi-codegen-extra-tags:
+            db: is_admin
+      description: |-
+        User model all fields isn't required
+          - `id`: the uuid
+          - `username`: the user's name
+          - `password`: the user's password, returned like a base64 string
+          - `email`: the user's email
+          - `is_admin`: define user permissions
+      examples:
+        - id: ac63a680-bddb-4102-b7a3-9fdc6ee53df2
+          username: admin
+          password: admin
+          email: admin@admin.ru
+          is_admin: true
+    ValidationError:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          $ref: '#/components/schemas/ValidationErrorMessage'
+    ValidationErrorMessage:
+      type: string
+      enum:
+        - bad params
+        - invalid username
+        - invalid password
+        - invalid email
+    ValidationErrorResponse:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          $ref: '#/components/schemas/ValidationErrorMessage'
+    uuid:
+      type: string
+      format: uuid
+      description: uuid defenition required in user model
+  securitySchemes:
+    BasicAuth:
+      type: http
+      scheme: Basic
+servers:
+  - url: http://localhost:8080
+    description: server
+    variables: {}

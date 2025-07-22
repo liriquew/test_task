@@ -12,6 +12,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      migrations:
+        condition: service_completed_successfully
     networks:
       - app-network
 
@@ -32,8 +34,20 @@ services:
       - "5432:5432"
     networks:
       - app-network
-
     restart: unless-stopped
+
+  migrations: # миграции
+    image: kukymbr/goose-docker:3.24.2
+    environment:
+      - GOOSE_DRIVER=postgres
+      - GOOSE_DBSTRING=postgres://postgres:passw0rd@postgres:5432/users_db?sslmode=disable
+    volumes:
+      - ./migrations:/migrations
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - app-network
 
 networks:
   app-network:

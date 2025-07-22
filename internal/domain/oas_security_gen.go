@@ -34,6 +34,7 @@ func findAuthorization(h http.Header, prefix string) (string, bool) {
 }
 
 var operationRolesBasicAuth = map[string][]string{
+	HealthOperation:            []string{},
 	ServiceCreateUserOperation: []string{},
 	ServiceDeleteUserOperation: []string{},
 	ServiceGetUserOperation:    []string{},

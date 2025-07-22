@@ -27,10 +27,6 @@ func (m *UserServiceMiddleware) HandleBasicAuth(
 	operationName api.OperationName,
 	t domain.BasicAuth,
 ) (context.Context, error) {
-
-	// m.log.Debug("logging...", slog.String(
-	// 	"vals", fmt.Sprintf("opName: %#v, t: %#v", operationName, t),
-	// ))
 	user, err := m.repo.GetUserByUsername(ctx, t.Username)
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {

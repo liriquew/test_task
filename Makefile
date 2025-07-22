@@ -23,3 +23,6 @@ gen_spec: ./spec/main.tsp
 
 migrate:
 	goose postgres $(GOOSE_DBSTRING) -dir migrations up
+
+check_health:
+	curl -X GET -I -u admin:admin  localhost:8080/health
