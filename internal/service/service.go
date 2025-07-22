@@ -9,7 +9,7 @@ import (
 
 //go:generate mockgen -source=service.go -destination=mocks/repository.go -package=mocks
 type Repository interface {
-	ListUsers(context.Context) ([]domain.User, error)
+	ListUsers(context.Context, int64) ([]domain.User, error)
 
 	CreateUser(context.Context, *domain.User) (*domain.UUID, error)
 	GetUserById(context.Context, domain.UUID) (*domain.User, error)

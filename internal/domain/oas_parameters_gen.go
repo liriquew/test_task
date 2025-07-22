@@ -160,6 +160,70 @@ func decodeServiceGetUserParams(args [1]string, argsEscaped bool, r *http.Reques
 	return params, nil
 }
 
+// ServiceListUsersParams is parameters of Service_listUsers operation.
+type ServiceListUsersParams struct {
+	Offset OptInt64
+}
+
+func unpackServiceListUsersParams(packed middleware.Parameters) (params ServiceListUsersParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "offset",
+			In:   "query",
+		}
+		if v, ok := packed[key]; ok {
+			params.Offset = v.(OptInt64)
+		}
+	}
+	return params
+}
+
+func decodeServiceListUsersParams(args [0]string, argsEscaped bool, r *http.Request) (params ServiceListUsersParams, _ error) {
+	q := uri.NewQueryDecoder(r.URL.Query())
+	// Decode query: offset.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "offset",
+			Style:   uri.QueryStyleForm,
+			Explode: false,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotOffsetVal int64
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToInt64(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotOffsetVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.Offset.SetTo(paramsDotOffsetVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "offset",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
 // ServicePatchUserParams is parameters of Service_patchUser operation.
 type ServicePatchUserParams struct {
 	UserId UUID

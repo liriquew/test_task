@@ -6,7 +6,10 @@ COPY go.mod go.sum ./
 
 RUN go mod download
 
-COPY . ./
+COPY cmd/ cmd/
+COPY pkg/ pkg/
+COPY internal/ internal/
+COPY config/ config/
 
 RUN CGO_ENABLED=0 go build -o /service cmd/main.go
 

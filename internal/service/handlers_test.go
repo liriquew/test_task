@@ -34,11 +34,13 @@ func TestListUsers(t *testing.T) {
 	res := domain.ServiceListUsersOKApplicationJSON(users)
 	repo.
 		EXPECT().
-		ListUsers(gomock.Any()).
+		ListUsers(gomock.Any(), int64(100)).
 		Return(users, nil)
 	s := service.New(StubLogger(), repo)
 
-	resp, err := s.ServiceListUsers(context.Background())
+	resp, err := s.ServiceListUsers(context.Background(), domain.ServiceListUsersParams{
+		Offset: domain.NewOptInt64(100),
+	})
 
 	require.Nil(t, err)
 	usersResp, ok := resp.(*domain.ServiceListUsersOKApplicationJSON)

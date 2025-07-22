@@ -64,14 +64,18 @@ func UUID(id domain.UUID) string {
 	return uuid.UUID(id).String()
 }
 
-func (s *Repository) ListUsers(ctx context.Context) ([]domain.User, error) {
+func (s *Repository) ListUsers(ctx context.Context, offset int64) ([]domain.User, error) {
 	var users []DBUser
+
+	fmt.Println("offset", offset)
 
 	query := `
 		SELECT * FROM users
+		OFFSET $1
+		LIMIT 10
 	`
 
-	if err := s.db.SelectContext(ctx, &users, query); err != nil {
+	if err := s.db.SelectContext(ctx, &users, query, offset); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return []domain.User{}, nil
 		}

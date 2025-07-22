@@ -38,7 +38,7 @@ type Handler interface {
 	// Returns a list of all users.
 	//
 	// GET /users/
-	ServiceListUsers(ctx context.Context) (ServiceListUsersRes, error)
+	ServiceListUsers(ctx context.Context, params ServiceListUsersParams) (ServiceListUsersRes, error)
 	// ServicePatchUser implements Service_patchUser operation.
 	//
 	// Patch User

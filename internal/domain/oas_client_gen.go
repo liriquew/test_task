@@ -60,7 +60,7 @@ type Invoker interface {
 	// Returns a list of all users.
 	//
 	// GET /users/
-	ServiceListUsers(ctx context.Context) (ServiceListUsersRes, error)
+	ServiceListUsers(ctx context.Context, params ServiceListUsersParams) (ServiceListUsersRes, error)
 	// ServicePatchUser invokes Service_patchUser operation.
 	//
 	// Patch User
@@ -595,12 +595,12 @@ func (c *Client) sendServiceGetUser(ctx context.Context, params ServiceGetUserPa
 // Returns a list of all users.
 //
 // GET /users/
-func (c *Client) ServiceListUsers(ctx context.Context) (ServiceListUsersRes, error) {
-	res, err := c.sendServiceListUsers(ctx)
+func (c *Client) ServiceListUsers(ctx context.Context, params ServiceListUsersParams) (ServiceListUsersRes, error) {
+	res, err := c.sendServiceListUsers(ctx, params)
 	return res, err
 }
 
-func (c *Client) sendServiceListUsers(ctx context.Context) (res ServiceListUsersRes, err error) {
+func (c *Client) sendServiceListUsers(ctx context.Context, params ServiceListUsersParams) (res ServiceListUsersRes, err error) {
 	otelAttrs := []attribute.KeyValue{
 		otelogen.OperationID("Service_listUsers"),
 		semconv.HTTPRequestMethodKey.String("GET"),
@@ -639,6 +639,27 @@ func (c *Client) sendServiceListUsers(ctx context.Context) (res ServiceListUsers
 	var pathParts [1]string
 	pathParts[0] = "/users/"
 	uri.AddPathParts(u, pathParts[:]...)
+
+	stage = "EncodeQueryParams"
+	q := uri.NewQueryEncoder()
+	{
+		// Encode "offset" parameter.
+		cfg := uri.QueryParameterEncodingConfig{
+			Name:    "offset",
+			Style:   uri.QueryStyleForm,
+			Explode: false,
+		}
+
+		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
+			if val, ok := params.Offset.Get(); ok {
+				return e.EncodeValue(conv.Int64ToString(val))
+			}
+			return nil
+		}); err != nil {
+			return res, errors.Wrap(err, "encode query")
+		}
+	}
+	u.RawQuery = q.Values().Encode()
 
 	stage = "EncodeRequest"
 	r, err := ht.NewRequest(ctx, "GET", u)

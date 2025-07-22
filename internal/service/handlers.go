@@ -16,11 +16,14 @@ func (s *Service) Health(ctx context.Context) error {
 	return nil
 }
 
-func (s *Service) ServiceListUsers(ctx context.Context) (
+func (s *Service) ServiceListUsers(
+	ctx context.Context,
+	params domain.ServiceListUsersParams,
+) (
 	domain.ServiceListUsersRes,
 	error,
 ) {
-	users, err := s.repo.ListUsers(ctx)
+	users, err := s.repo.ListUsers(ctx, params.Offset.Value)
 	if err != nil {
 		s.log.Warn("error while getting users in ListUsers", sl.Err(err))
 		return &domain.InternalErrorResponse{}, nil

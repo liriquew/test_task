@@ -96,7 +96,7 @@ namespace Service {
   @doc("Returns a list of all users")
   @get
   @useAuth(BasicAuth)
-  op listUsers():
+  op listUsers(@query offset?: int64):
     | UserListResponse
     | InternalErrorResponse;
 

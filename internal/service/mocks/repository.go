@@ -101,18 +101,18 @@ func (mr *MockRepositoryMockRecorder) GetUserByUsername(arg0, arg1 any) *gomock.
 }
 
 // ListUsers mocks base method.
-func (m *MockRepository) ListUsers(arg0 context.Context) ([]api.User, error) {
+func (m *MockRepository) ListUsers(arg0 context.Context, arg1 int64) ([]api.User, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListUsers", arg0)
+	ret := m.ctrl.Call(m, "ListUsers", arg0, arg1)
 	ret0, _ := ret[0].([]api.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ListUsers indicates an expected call of ListUsers.
-func (mr *MockRepositoryMockRecorder) ListUsers(arg0 any) *gomock.Call {
+func (mr *MockRepositoryMockRecorder) ListUsers(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListUsers", reflect.TypeOf((*MockRepository)(nil).ListUsers), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListUsers", reflect.TypeOf((*MockRepository)(nil).ListUsers), arg0, arg1)
 }
 
 // UpdateUser mocks base method.

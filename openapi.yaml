@@ -22,7 +22,14 @@ paths:
     get:
       operationId: Service_listUsers
       description: Returns a list of all users
-      parameters: []
+      parameters:
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int64
+          explode: false
       responses:
         '200':
           description: The request has succeeded.

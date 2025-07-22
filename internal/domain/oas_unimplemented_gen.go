@@ -55,7 +55,7 @@ func (UnimplementedHandler) ServiceGetUser(ctx context.Context, params ServiceGe
 // Returns a list of all users.
 //
 // GET /users/
-func (UnimplementedHandler) ServiceListUsers(ctx context.Context) (r ServiceListUsersRes, _ error) {
+func (UnimplementedHandler) ServiceListUsers(ctx context.Context, params ServiceListUsersParams) (r ServiceListUsersRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 

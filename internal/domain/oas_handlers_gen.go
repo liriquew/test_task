@@ -862,6 +862,16 @@ func (s *Server) handleServiceListUsersRequest(args [0]string, argsEscaped bool,
 			return
 		}
 	}
+	params, err := decodeServiceListUsersParams(args, argsEscaped, r)
+	if err != nil {
+		err = &ogenerrors.DecodeParamsError{
+			OperationContext: opErrContext,
+			Err:              err,
+		}
+		defer recordError("DecodeParams", err)
+		s.cfg.ErrorHandler(ctx, w, r, err)
+		return
+	}
 
 	var response ServiceListUsersRes
 	if m := s.cfg.Middleware; m != nil {
@@ -871,13 +881,18 @@ func (s *Server) handleServiceListUsersRequest(args [0]string, argsEscaped bool,
 			OperationSummary: "",
 			OperationID:      "Service_listUsers",
 			Body:             nil,
-			Params:           middleware.Parameters{},
-			Raw:              r,
+			Params: middleware.Parameters{
+				{
+					Name: "offset",
+					In:   "query",
+				}: params.Offset,
+			},
+			Raw: r,
 		}
 
 		type (
 			Request  = struct{}
-			Params   = struct{}
+			Params   = ServiceListUsersParams
 			Response = ServiceListUsersRes
 		)
 		response, err = middleware.HookMiddleware[
@@ -887,14 +902,14 @@ func (s *Server) handleServiceListUsersRequest(args [0]string, argsEscaped bool,
 		](
 			m,
 			mreq,
-			nil,
+			unpackServiceListUsersParams,
 			func(ctx context.Context, request Request, params Params) (response Response, err error) {
-				response, err = s.h.ServiceListUsers(ctx)
+				response, err = s.h.ServiceListUsers(ctx, params)
 				return response, err
 			},
 		)
 	} else {
-		response, err = s.h.ServiceListUsers(ctx)
+		response, err = s.h.ServiceListUsers(ctx, params)
 	}
 	if err != nil {
 		defer recordError("Internal", err)

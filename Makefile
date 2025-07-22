@@ -21,6 +21,9 @@ gen_spec: ./spec/main.tsp
 	cp ./spec/tsp-output/schema/openapi.yaml .
 	go run github.com/ogen-go/ogen/cmd/ogen@latest --target ./internal/domain --clean openapi.yaml
 
+gen_mocks:
+	go generate internal/service/service.go
+
 migrate:
 	goose postgres $(GOOSE_DBSTRING) -dir migrations up
 
