@@ -1,13 +1,27 @@
 ## Задание
 Необходимо написать веб сервис который занимается хранением профилей пользователей и их авторизацией.
 
-Зависимости:
-  - Роутер chi, полностью совместим с net/http (github.com/go-chi/chi/v5 v5.2.1)
+Зависимости сервиса:
+  - Для выполнения запросов к БД (github.com/jmoiron/sqlx v1.4.0)
+  - Драйвер БД (github.com/lib/pq v1.10.9)
   - Для генерации uuid (github.com/google/uuid v1.6.0)
+  - Для хеширования паролей (golang.org/x/crypto v0.40.0)
 
 Для тестов:
   - gofakeit для генерации тестовых данных
   - testify для assert/require
+  - gomock для генерации моков для юнит тестов
+
+Зависимости команд из Makefile:
+  - tsp 1.2.1 [ссылка](https://typespec.io/)
+  - ogen 1.14.0 [ссылка](https://ogen.dev/blog/ogen-intro/)
+  - mockgen v0.5.2 [ссылка](https://github.com/uber-go/mock)
+  - goose v3.24.3 [ссылка](https://github.com/pressly/goose)
+
+Документация:
+  - API описан в **spec/main.tsp**
+  - openapi спецификация: **openapi.yaml**
+  - postman коллекция: **test_task.postman_collection.json**
 
 ### Запуск
 
@@ -25,13 +39,18 @@ docker compose up -d --build
 4. password
 5. admin (bool)
 
+### Ограничения:
+ - Длина имени пользователя должна быть больше 8 и состоять из английских букв и цифр
+ - Длина пароля должна быть больше 8 и включать английские строчные и заглавные буквы и цифры
+ - Почта должна быть валидной почтой
+
 ## API
 У сервиса должeн быть набор ручек (rest, json):
 ```
 GET /user (выдача листинга пользователей)
 ```
 
-Выдача профиля по id, изменение и удаление профиля, доступно только пользователям с **Admin:true**
+Создание, выдача, изменение и удаление профиля, доступно только пользователям с **Admin:true**
 ```
 POST /users (создание пользователя)
 GET /user/{id} (выдача пользователя)
@@ -51,12 +70,6 @@ Basic base64encode(username:password)
 
 base64: [ссылка](https://www.base64encode.org/)
 
-В случае, если в запросе не был указан нужный заголовок, в заголовке ответа будет указано следующее:
-```
-WWW-Authenticate: Basic realm="user service"
-```
-Что означает, что пользователю нужно ввести данные аутентификации в **user service**
-
 ### Админ
 Изначально, при старте, в хранилище создается админ
 ```go
@@ -71,42 +84,43 @@ Authorization: Basic YWRtaW46YWRtaW4=
 ```
 
 ## Хранение
-Для хранения данных профилей необходимо реализовать примитивную in memory базу данных
+Для хранения используется postgres 17.5
 
 ### Интерфейс, требуемый для работы сервиса
 
 ```go
 // internal/service/service.go
 type Repository interface {
-	ListUsers() []models.User
+	ListUsers(context.Context, int64) ([]domain.User, error)
 
-	// crud
-	CreateUser(models.User) (*uuid.UUID, error)
-	GetUserById(uuid.UUID) (*models.User, error)
-	UpdateUser(models.User) error
-	DeleteUser(uuid.UUID) error
+	CreateUser(context.Context, *domain.User) (*domain.UUID, error)
+	GetUserById(context.Context, domain.UUID) (*domain.User, error)
+	UpdateUser(context.Context, *domain.User) error
+	DeleteUser(context.Context, domain.UUID) error
 
-	// используется в middleware
-	GetUserByUsername(string) (*models.User, error)
-}
-```
-
-### Стуктура, имплементирующая базу данных
-
-В каждой операции чтения берется блокировка на чтение, при каждой операции записи берется блокировка на запись.
-
-Перед возвратом записи о пользователе, запись копируется, благодаря этому изменения в разных запросах будут атомарны (одно изменение перезапишет другое)
-```go
-// internal/storage/storage.go
-type Storage struct {
-	users     map[uuid.UUID]*models.User // uuid -> user
-	usernames map[string]uuid.UUID // username -> uuid
-
-	m *sync.RWMutex
+	GetUserByUsername(context.Context, string) (*domain.User, error)
 }
 ```
 
 ## Тестирование
+
+### Юнит тесты
+Для тестирования корректности валидации написаны юнит тесты, для подмены базы данных в тестах используется gomock
+```go
+// internal/service/service.go
+
+//go:generate mockgen -source=service.go -destination=mocks/repository.go -package=mocks
+type Repository interface {
+	...
+}
+```
+
+Для генерации моков есть команда в Makefile
+```bash
+make gen_mocks
+```
+
+### e2e тесты
 Для проверки работоспособности были написаны сквозные (e2e) тесты. Для избежания дублирования кода, была написана функция, **DoRequest**, которая скрывает детали взаимодействия. Условно, выполнение функции можно разделить на этапы:
 
 - подготовка параметров запроса
@@ -128,5 +142,7 @@ func DoRequest(t *testing.T, method, url string, body any, header map[string]str
 
 Запуск тестов из корня проекта
 ```bash
+make test # запустит e2e и юнит тесты
+# или
 go test ./tests/* -count 1 -v
 ```
